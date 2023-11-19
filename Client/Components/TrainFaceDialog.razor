@@ -1,0 +1,155 @@
+﻿@inject ISnackbar Snackbar
+@inject HttpClient Http
+
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Text.Json.Serialization
+@using System.Text.Json
+
+<MudForm Model=_model @ref=_form Validation=_validationRules.ValidateValue>
+    <MudDialog>
+        <DialogContent>
+            <div style="display: flex; justify-content: center">
+                @if (_selectedImage != null)
+                {
+                    <MudImage Src=@($"data:image /jpeg;base64, {_selectedImage}") Style="width: 100%" />
+                }
+                else if (_processingImage)
+                {
+                    <MudProgressCircular Color=Color.Primary Size=Size.Large Indeterminate=true />
+                }
+            </div>
+            <MudTextField Label=@nameof(_model.Name)
+                          For=@(() => _model.Name)
+                          @bind-Value=_model.Name/>
+
+            <MudFileUpload T=IBrowserFile
+                           For=@(() => _model.File)
+                           @bind-Files=_model.File
+                           OnFilesChanged=UploadFiles>
+                <ButtonTemplate>
+                    <MudButton HtmlTag=label
+                               Variant=Variant.Filled
+                               Color=Color.Primary
+                               StartIcon=@Icons.Material.Filled.CloudUpload
+                               for=@context.Id>
+                        Upload Files
+                    </MudButton>
+
+                    <MudButton OnClick=@context.Actions.ClearAsync
+                               Variant=Variant.Filled
+                               Color=Color.Primary
+                               StartIcon=@Icons.Material.Filled.Clear>
+                        Clear Files
+                    </MudButton>
+                </ButtonTemplate>
+            </MudFileUpload>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick=Cancel>Cancel</MudButton>
+            <MudButton OnClick=@(async () => await Submit()) Color=Color.Primary>Ok</MudButton>
+        </DialogActions>
+    </MudDialog>
+</MudForm>
+
+@code {
+
+    public class TrainFaceModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public IBrowserFile? File { get; set; }
+
+        public async Task<TrainFaceData> ToData()
+        {
+            var data = File != null
+                ? await GetFileContent(File)
+                : Array.Empty<byte>();
+
+            return new TrainFaceData(Name, data);
+        }
+    };
+
+    [CascadingParameter]
+    private MudDialogInstance _mudDialog { get; set; } = new();
+
+    private MudForm _form = new();
+
+    private TrainFaceModel _model = new();
+
+    private FileModelFluentValidator _validationRules = new();
+
+    private string? _selectedImage;
+
+    private bool _processingImage;
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+
+        if (_form.IsValid)
+        {
+            var response = await Http.PostAsJsonAsync("TrainFace", await _model.ToData());
+
+            Snackbar.Add("Face trained!");
+
+            _mudDialog.Close();
+        }
+    }
+
+    private void Cancel() => _mudDialog.Cancel();
+
+    private async Task UploadFiles(InputFileChangeEventArgs e)
+    {
+        _processingImage = true;
+
+        await InvokeAsync(StateHasChanged);
+
+        var content = await GetFileContent(e.File);
+
+        var response = await Http.PostAsync("ConvertImage", new ByteArrayContent(content));
+
+        _selectedImage = await response.Content.ReadAsStringAsync();
+
+        _processingImage = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private static async Task<byte[]> GetFileContent(IBrowserFile file)
+    {
+        using var ms = new MemoryStream();
+        using var fileStream = file.OpenReadStream(2000 * 1024 * 1024);
+
+        await fileStream.CopyToAsync(ms);
+
+        return ms.ToArray();
+    }
+
+    public class FileModelFluentValidator : AbstractValidator<TrainFaceModel>
+    {
+        public FileModelFluentValidator()
+        {
+            RuleFor(x => x.Name)
+                .NotEmpty()
+                .Length(1, 100);
+
+            RuleFor(x => x.File)
+                .NotEmpty();
+
+            When(x => x.File != null, () =>
+            {
+                RuleFor(x => x.File!.Size)
+                    .LessThanOrEqualTo(10485760).WithMessage("The maximum file size is 10 MB");
+            });
+        }
+
+        public Func<object, string, Task<IEnumerable<string>>> ValidateValue => async (model, propertyName) =>
+        {
+            var result = await ValidateAsync(ValidationContext<TrainFaceModel>.CreateWithOptions(
+                (TrainFaceModel)model, x => x.IncludeProperties(propertyName)));
+
+            return !result.IsValid
+                ? result.Errors.Select(e => e.ErrorMessage)
+                : Array.Empty<string>();
+        };
+    }
+}
