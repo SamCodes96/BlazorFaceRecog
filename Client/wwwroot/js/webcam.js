@@ -27,9 +27,7 @@ function getFrame(src, dest) {
     canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
 
     return {
-        dataUrl: canvas.toDataURL("image/jpeg"),
-        width: canvas.videoWidth,
-        height: canvas.videoHeight
+        dataUrl: canvas.toDataURL("image/jpeg")
     }
 }
 

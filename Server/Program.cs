@@ -4,6 +4,7 @@ using BlazorFaceRecog.Server.Repositories;
 using BlazorFaceRecog.Server.Services;
 using FaceONNX;
 using Microsoft.AspNetCore.ResponseCompression;
+using MongoDB.Driver;
 using ONNXOptions = Microsoft.ML.OnnxRuntime.SessionOptions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,10 +22,16 @@ builder.Services.AddSingleton<FaceService>();
 builder.Services.AddSingleton<FaceLogic>();
 builder.Services.AddSingleton<FaceRepository>();
 
-builder.Services.AddSingleton(ONNXOptions.MakeSessionOptionWithCudaProvider());
+builder.Services.AddSingleton(builder.Configuration.GetValue<bool>("UseGPU")
+    ? ONNXOptions.MakeSessionOptionWithCudaProvider()
+    : new ONNXOptions());
+
 builder.Services.AddSingleton<IFace68LandmarksExtractor, Face68LandmarksExtractor>();
 builder.Services.AddSingleton<IFaceDetector, FaceDetector>();
 builder.Services.AddSingleton<IFaceClassifier, FaceEmbedder>();
+
+var mongoClient = new MongoClient(builder.Configuration.GetConnectionString("MongoDB"));
+builder.Services.AddSingleton(mongoClient.GetDatabase(builder.Configuration.GetSection("MongoDb")["DatabaseName"]));
 
 var app = builder.Build();
 

@@ -1,9 +1,9 @@
-﻿@inject ISnackbar Snackbar
-@inject HttpClient Http
-
-@using Microsoft.AspNetCore.Components.Forms
+﻿@using Microsoft.AspNetCore.Components.Forms
 @using System.Text.Json.Serialization
 @using System.Text.Json
+
+@inject ISnackbar Snackbar
+@inject HttpClient Http
 
 <MudForm Model=_model @ref=_form Validation=_validationRules.ValidateValue>
     <MudDialog>
@@ -52,7 +52,6 @@
 </MudForm>
 
 @code {
-
     public class TrainFaceModel
     {
         public string Name { get; set; } = string.Empty;
@@ -67,6 +66,8 @@
             return new TrainFaceData(Name, data);
         }
     };
+
+    public static string Title = "Train a face";
 
     [CascadingParameter]
     private MudDialogInstance _mudDialog { get; set; } = new();
@@ -105,11 +106,9 @@
 
         var content = await GetFileContent(e.File);
 
-        var response = await Http.PostAsync("ConvertImage", new ByteArrayContent(content));
+        var response = await Http.PostAsJsonAsync("GetFace", content);
 
         _selectedImage = await response.Content.ReadAsStringAsync();
-
-        _processingImage = false;
 
         await InvokeAsync(StateHasChanged);
     }
