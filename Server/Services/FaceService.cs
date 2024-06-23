@@ -1,47 +1,63 @@
 ﻿using System.Drawing;
+using System.Drawing.Imaging;
 using BlazorFaceRecog.Server.Logic;
 using BlazorFaceRecog.Server.Repositories;
 using BlazorFaceRecog.Shared;
 
-namespace BlazorFaceRecog.Server.Services
+namespace BlazorFaceRecog.Server.Services;
+
+public class FaceService(
+    FaceRepository faceRepository,
+    FaceLogic faceLogic)
 {
-    public class FaceService(
-        FaceRepository faceRepository,
-        FaceLogic faceLogic)
+    public bool FaceIsTrained => faceRepository.Count > 0;
+
+    public Rectangle[] DetectInImage(byte[] imageData)
     {
-        public bool FaceIsTrained => faceRepository.Count > 0;
+        using var bmImage = GetBitmapImage(imageData);
 
-        public Rectangle[] DetectInImage(ImageData data)
-        {
-            using var bmImage = GetBitmapImage(data.Bytes);
+        var result = faceLogic.Detect(bmImage);
 
-            var result = faceLogic.Detect(bmImage);
+        return result.Select(x => x.Box).ToArray();
+    }
 
-            return result.Select(x => x.Box).ToArray();
-        }
+    public string RecogniseInImage(byte[] imageData, Rectangle faceArea)
+    {
+        using var bmImage = GetBitmapImage(imageData);
 
-        public string RecogniseInImage(ImageData data, Rectangle face)
-        {
-            using var bmImage = GetBitmapImage(data.Bytes);
+        var embedding = faceLogic.GetEmbedding(bmImage, faceArea);
+        return faceRepository.GetNearestFace(embedding);
+    }
 
-            var vector = faceLogic.GetEmbedded(bmImage, face);
-            var (label, min) = faceRepository.FromSimilarity(vector);
+    public void TrainFromImage(TrainFaceData data, Rectangle faceArea)
+    {
+        using var bmImage = GetBitmapImage(data.imageData);
 
-            return label + $" - {min}";
-        }
+        var embedding = faceLogic.GetEmbedding(bmImage, faceArea);
+        faceRepository.Add(data.Name, embedding);
+    }
 
-        public void TrainFromImage(TrainFaceData data, Rectangle face)
-        {
-            using var bmImage = GetBitmapImage(data.Data);
+    public byte[] CropFaceInImage(byte[] imageData, Rectangle faceArea)
+    {
+        using var bmImage = GetBitmapImage(imageData);
 
-            var vector = faceLogic.GetEmbedded(bmImage, face);
-            faceRepository.Add(data.Name, vector);
-        }
+        using var croppedImage = new Bitmap(bmImage.Width, bmImage.Height);
+        using Graphics g = Graphics.FromImage(croppedImage);
+        g.DrawImage(
+            bmImage,
+            new Rectangle(0, 0, croppedImage.Width, croppedImage.Height),
+            faceArea,
+            GraphicsUnit.Pixel);
 
-        private static Bitmap GetBitmapImage(byte[] bytes)
-        {
-            using var ms = new MemoryStream(bytes);
-            return new Bitmap(ms);
-        }
+        using var ms = new MemoryStream();
+        croppedImage.Save(ms, ImageFormat.Jpeg);
+
+        return ms.ToArray();
+    }
+
+    private static Bitmap GetBitmapImage(byte[] imageData)
+    {
+        using var ms = new MemoryStream(imageData);
+        return new Bitmap(ms);
     }
 }

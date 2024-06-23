@@ -33,8 +33,7 @@
 }
 
 @code {
-
-    private record class JSImage(string DataUrl, int Width, int Height);
+    private record class JSImage(string DataUrl);
 
     private bool _isProcessing;
 
@@ -90,11 +89,11 @@
 
     private async Task ProcessFrame()
     {
-        var image = await JsRuntime.InvokeAsync<JSImage>("getFrame", "videoFeed", "currentFrame");
+        var imageString = await JsRuntime.InvokeAsync<JSImage>("getFrame", "videoFeed", "currentFrame");
 
-        var imageBytes = GetBytesFromDataUrl(image.DataUrl);
+        var imageBytes = GetBytesFromDataUrl(imageString.DataUrl);
 
-        await ImageService.RecogniseFaces(new ImageData(imageBytes, image.Width, image.Height));
+        await ImageService.RecogniseFaces(imageBytes);
     }
 
     private static byte[] GetBytesFromDataUrl(string dataUrl)
@@ -110,6 +109,6 @@
 
     private void OpenTrainDialog()
     {
-        DialogService.Show<TrainFaceDialog>("Train a face");
+        DialogService.Show<TrainFaceDialog>(TrainFaceDialog.Title);
     }
 }

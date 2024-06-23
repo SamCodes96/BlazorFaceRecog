@@ -10,6 +10,8 @@
     <PackageReference Include="FaceONNX" Version="4.0.2.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.6" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.9.0" />
+    <PackageReference Include="MongoDB.Bson" Version="2.26.0" />
+    <PackageReference Include="MongoDB.Driver" Version="2.26.0" />
   </ItemGroup>
 
   <ItemGroup>    
