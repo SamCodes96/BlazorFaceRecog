@@ -12,6 +12,7 @@ builder.Services.AddHttpClient("BlazorFaceRecog.ServerAPI", client => client.Bas
 
 // Supply HttpClient instances that include access tokens when making requests to the server project
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("BlazorFaceRecog.ServerAPI"));
+
 builder.Services.AddScoped<FaceHubService>();
 
 builder.Services.AddMudServices();

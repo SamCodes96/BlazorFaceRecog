@@ -24,7 +24,7 @@ public class FaceHubService
         await _hubConnection.StartAsync();
     }
 
-    public async Task RecogniseFaces(ImageData imageData)
+    public async Task RecogniseFaces(byte[] imageData)
     {
         await _hubConnection.SendAsync("RecogniseInImage", imageData);
     }
