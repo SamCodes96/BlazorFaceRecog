@@ -1,0 +1,24 @@
+﻿<MudGrid Spacing="2" Justify="Justify.Center">
+    @foreach (var key in FaceCards.Keys)
+    {
+        <MudItem @key=key @ref=FaceCards[key]>
+            <FaceCard OnRemove=@(() => Remove(key))/>
+        </MudItem>
+    }
+</MudGrid>
+
+@code {
+    public readonly Dictionary<Guid, MudItem> FaceCards = new Dictionary<Guid, MudItem> { { Guid.NewGuid(), new MudItem() } };
+
+    public void AddNew()
+    {
+        FaceCards.Add(Guid.NewGuid(), new());
+        StateHasChanged();
+    }
+
+    private void Remove(Guid id)
+    {
+        FaceCards.Remove(id);
+        StateHasChanged();
+    }
+}
