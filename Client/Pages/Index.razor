@@ -3,37 +3,32 @@
 
 @page "/"
 
-@inject IJSRuntime JsRuntime
 @inject IDialogService DialogService
-@inject FaceHubService ImageService
+@inject FaceHubService FaceHubService
 
 <PageTitle>Blazor Face Recog</PageTitle>
 
-<div style="position: relative; width: 100%; margin-top: 20px">
-    <video id="videoFeed" style="width: 100%; height: 100%"></video>
-    <canvas id="currentFrame" style="width:100%; height: 100%; position: absolute; left: 0; display:none;"></canvas>
-    <canvas id="faceHighlight" style="width: 100%; height: 100%; position: absolute; left: 0; z-index: 1"></canvas>
-</div>
-<div>
+<CameraFeed @ref=_cameraFeed />
+<MudStack Row=true>
     <MudButton OnClick=@(() => StartStopProcessing())
                Color=MudBlazor.Color.Primary
-               Variant=Variant.Filled
-    >@(!_isProcessing ? "Start" : "Stop")</MudButton>
+               Variant=Variant.Filled>@(!_isProcessing ? "Start" : "Stop")</MudButton>
 
     <MudButton OnClick=OpenTrainDialog
                Disabled=_isProcessing
                Color=MudBlazor.Color.Primary
-               Variant=Variant.Filled
-    >Train</MudButton>
-</div>
+               Variant=Variant.Filled>Train</MudButton>
+</MudStack>
 
 @if (_isProcessing)
 {
-    <span>Face: @(_analyzedImage?.Name ?? "Not recognised") </span>
+    <MudText Typo=@Typo.subtitle2>
+        Face: @(_analyzedImage?.Name ?? "Not recognised")
+    </MudText>
 }
 
 @code {
-    private record class JSImage(string DataUrl);
+    private CameraFeed _cameraFeed = new();
 
     private bool _isProcessing;
 
@@ -43,26 +38,25 @@
 
     protected override async Task OnInitializedAsync()
     {
-        ImageService.OnResponseReceived += async analyzedImage =>
+        FaceHubService.OnResponseReceived += async analyzedImage =>
         {
             _analyzedImage = analyzedImage;
 
             if (_analyzedImage != null)
             {
                 var face = _analyzedImage.Face;
-                await JsRuntime.InvokeVoidAsync("drawOnFrame", "faceHighlight", face.X, face.Y, face.Width, face.Height);
+                await _cameraFeed.DrawOnFrame(face);
             }
             else
             {
-                await ClearFaceHighlight();
+                await _cameraFeed.ClearFaceHighlight();
             }
 
             await InvokeAsync(StateHasChanged);
         };
 
-        await JsRuntime.InvokeVoidAsync("startVideo", "videoFeed");
 
-        await ImageService.StartConnection();
+        await FaceHubService.StartConnection();
     }
 
     private async Task StartStopProcessing()
@@ -70,11 +64,12 @@
         if (!_isProcessing)
         {
             _isProcessing = true;
-            _processTimer = new PeriodicTimer(TimeSpan.FromSeconds(0.2));
+            _processTimer = new PeriodicTimer(TimeSpan.FromSeconds(0.5));
 
             while (await _processTimer.WaitForNextTickAsync())
             {
-                await ProcessFrame();
+                var bytes = await _cameraFeed.ProcessFrame();
+                await FaceHubService.RecogniseFaces(bytes);
             }
         }
         else
@@ -82,29 +77,9 @@
             _isProcessing = false;
             _processTimer?.Dispose();
             _analyzedImage = null;
-            await ClearFaceHighlight();
+            await _cameraFeed.ClearFaceHighlight();
             await InvokeAsync(StateHasChanged);
         }
-    }
-
-    private async Task ProcessFrame()
-    {
-        var imageString = await JsRuntime.InvokeAsync<JSImage>("getFrame", "videoFeed", "currentFrame");
-
-        var imageBytes = GetBytesFromDataUrl(imageString.DataUrl);
-
-        await ImageService.RecogniseFaces(imageBytes);
-    }
-
-    private static byte[] GetBytesFromDataUrl(string dataUrl)
-    {
-        var base64Data = Regex.Match(dataUrl, "data:image/(?<type>.+?),(?<data>.+)").Groups["data"].Value;
-        return Convert.FromBase64String(base64Data);
-    }
-
-    private async Task ClearFaceHighlight()
-    {
-        await JsRuntime.InvokeVoidAsync("clearFrame", "faceHighlight");
     }
 
     private void OpenTrainDialog()

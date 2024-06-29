@@ -31,7 +31,7 @@ public class FaceService(
 
     public void TrainFromImage(TrainFaceData data, Rectangle faceArea)
     {
-        using var bmImage = GetBitmapImage(data.imageData);
+        using var bmImage = GetBitmapImage(data.ImageData);
 
         var embedding = faceLogic.GetEmbedding(bmImage, faceArea);
         faceRepository.Add(data.Name, embedding);
