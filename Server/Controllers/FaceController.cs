@@ -11,7 +11,7 @@ namespace BlazorFaceRecog.Server.Controllers
         [Route(nameof(TrainFace))]
         public IActionResult TrainFace([FromBody]TrainFaceData trainFaceData)
         {
-            var faces = faceService.DetectInImage(trainFaceData.imageData);
+            var faces = faceService.DetectInImage(trainFaceData.ImageData);
 
             if (faces.Length != 1) return BadRequest();
 
