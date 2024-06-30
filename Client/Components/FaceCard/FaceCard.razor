@@ -1,0 +1,140 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using MudBlazor.Utilities
+@using System.Threading
+
+@inject HttpClient Http
+
+<MudPaper class="pa-2" Elevation="0" Style=@($"border: 1px solid var({borderColour})")>
+    <MudForm Model=Model @ref=@_form Validation="_validator.ValidateValue">
+        <MudStack Spacing="0">
+            <MudIconButton Icon=@Icons.Material.Filled.Close
+                           Size=@Size.Small
+                           Class="align-self-end mb-4"
+                           OnClick=@Remove />
+            <MudStack Spacing="0" Style="height:86px; align-items:center">
+                <MudElement HtmlTag="div" Style="height: 100%;">
+                    @if (_previewImage != null)
+                    {
+                        <MudImage Src=@($"data:image /jpeg;base64, {_previewImage}") Style="height:100%; aspect-ratio:1/1;" />
+                    }
+                    else if (_faceCardState == FaceCardState.Selected)
+                    {
+                        <MudStack Spacing="0" Style="height: 100%;">
+                            <MudProgressCircular Color=Color.Primary Size=Size.Medium Indeterminate=true Class="my-auto" />
+                        </MudStack>
+                    }
+                    <MudFileUpload T=IBrowserFile
+                                   For=@(() => Model.File)
+                                   @bind-Files=Model.File
+                                   @ref=_file
+                                   OnFilesChanged=@GetFaceFromImage
+                                   ErrorText=@fileErrorText
+                                   Error=@(fileErrorText != null)
+                                   Style="align-items:center">
+
+
+                        <ButtonTemplate>
+                            @if (_faceCardState != FaceCardState.Selected)
+                            {
+                                <MudIconButton HtmlTag="label"
+                                               Icon=@Icons.Material.Filled.FileOpen
+                                               Size=@Size.Large
+                                               for=@context.Id />
+                            }
+                        </ButtonTemplate>
+                    </MudFileUpload>
+                </MudElement>
+                @if (!_file.HasErrors && _faceCardState == FaceCardState.Unselected)
+                {
+                    <MudText Typo=@Typo.body2
+                             Align=@Align.Center>Select an image</MudText>
+                }
+            </MudStack>
+            <MudTextField Label="Name"
+                          For=@(() => Model.Name)
+                          @bind-Value=Model.Name
+                          @ref=_name
+                          OnBlur=StateHasChanged />
+        </MudStack>
+    </MudForm>
+</MudPaper>
+
+@code {
+    [Parameter, EditorRequired]
+    public Guid Id { get; set; }
+
+    [Parameter, EditorRequired]
+    public EventCallback OnRemove { get; set; }
+
+    public FaceCardModel Model { get; } = new();
+
+    private FaceModelFluentValidator _validator = new();
+
+    private MudForm _form = new();
+
+    private MudTextField<string?> _name = new();
+
+    private MudFileUpload<IBrowserFile> _file = new();
+
+    private FaceCardState _faceCardState;
+
+    private string? _previewImage;
+
+    private string? _fileFailureErrorOverride;
+
+    private string borderColour => _name.HasErrors || _file.HasErrors
+        ? "--mud-palette-error"
+        : "--mud-palette-lines-default";
+
+    private string? fileErrorText => _fileFailureErrorOverride ?? _file.GetErrorText();
+
+    public async Task<bool> Validate()
+    {
+        await _form.Validate();
+        StateHasChanged();
+
+        return _form.IsValid;
+    }
+
+    private void Remove()
+    {
+        OnRemove.InvokeAsync();
+    }
+
+    private async Task GetFaceFromImage(InputFileChangeEventArgs e)
+    {
+        _faceCardState = FaceCardState.Selected;
+        _fileFailureErrorOverride = null;
+
+        StateHasChanged();
+
+        var image = await GetFileContent(e.File);
+        var payload = new DetectFaceModel(Id, image);
+
+        var response = await Http.PostAsJsonAsync("DetectFace", payload);
+        var content = await response.Content.ReadAsStringAsync();
+
+        if (response.IsSuccessStatusCode)
+        {
+            _previewImage = content;
+        }
+        else
+        {
+            Model.File = null;
+            _faceCardState = FaceCardState.Failed;
+            _fileFailureErrorOverride = $"Failed: {content}";
+        }
+
+        StateHasChanged();
+    }
+
+    private static async Task<byte[]> GetFileContent(IBrowserFile file)
+    {
+        using var ms = new MemoryStream();
+        using var fileStream = file.OpenReadStream(2000 * 1024 * 1024);
+
+        await fileStream.CopyToAsync(ms);
+
+        return ms.ToArray();
+    }
+}

@@ -1,51 +1,50 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
+﻿@using BlazorFaceRecog.Client.Components.FaceCard
+@using Microsoft.AspNetCore.Components.Forms
 @using System.Text.Json.Serialization
 @using System.Text.Json
 
 @inject ISnackbar Snackbar
 @inject HttpClient Http
 
-<MudForm Model=_model @ref=_form>
-    <MudDialog ContentStyle="max-height:600px; overflow-y:auto;">
-        <DialogContent>
-            <FaceCardGrid @ref=_cardGrid />
-        </DialogContent>
-        <DialogActions>
-            <MudButton OnClick=AddCard
-                       StartIcon=@Icons.Material.Filled.Add
-                       Variant=Variant.Filled
-                       Color=MudBlazor.Color.Primary>Add Face</MudButton>
-            <MudSpacer />
-            <MudButton OnClick=Cancel>Cancel</MudButton>
-            <MudButton OnClick=@(async () => await Submit()) Color=Color.Primary>Ok</MudButton>
-        </DialogActions>
-    </MudDialog>
-</MudForm>
+<MudDialog ContentStyle="max-height:600px; overflow-y:auto;">
+    <DialogContent>
+        <FaceCardGrid @ref=_cardGrid/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick=AddCard
+                    StartIcon=@Icons.Material.Filled.Add
+                    Variant=Variant.Filled
+                    Color=MudBlazor.Color.Primary>Add Face</MudButton>
+        <MudSpacer />
+        <MudButton OnClick=Cancel>Cancel</MudButton>
+        <MudButton OnClick=@(async () => await Submit()) Color=Color.Primary>Ok</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
-    public class TrainFaceModel()
-    {
-        //...
-    };
-
     public static string Title = "Train faces";
 
     [CascadingParameter]
     private MudDialogInstance _mudDialog { get; set; } = new();
 
-    private MudForm _form = new();
-
-    private TrainFaceModel _model = new();
-
     private FaceCardGrid _cardGrid = new();
 
     private async Task Submit()
     {
-        var response = await Http.PostAsJsonAsync("TrainFace", _model.ToString());
+        var valid = await _cardGrid.ValidateCards();
+        if (!valid)
+            return;
 
-        Snackbar.Add("Face trained!");
+        var faceModels = _cardGrid.GetModels().ToArray();
 
-        _mudDialog.Close();
+        var response = await Http.PostAsJsonAsync("TrainFaces", faceModels);
+
+        if (response.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Faces trained!");
+
+            _mudDialog.Close();
+        }        
     }
 
     private void Cancel() => _mudDialog.Cancel();
