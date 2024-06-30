@@ -6,9 +6,9 @@ namespace BlazorFaceRecog.Server.Repositories;
 public class FaceRepository(IMongoDatabase database, IConfiguration configuration)
     : RepositoryBase<EmbeddedFaceDto>(database, "Faces")
 {
-    public void Add(string name, float[] embedding)
+    public void Add(Guid id, string name, float[] embedding)
     {
-        Collection.InsertOne(new EmbeddedFaceDto(name, embedding));
+        Collection.InsertOne(new EmbeddedFaceDto(id, name, embedding));
     }
 
     public string GetNearestFace(float[] embedding)

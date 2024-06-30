@@ -18,6 +18,9 @@ builder.Services.AddSignalR();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<CacheService>();
+
 builder.Services.AddSingleton<FaceService>();
 builder.Services.AddSingleton<FaceLogic>();
 builder.Services.AddSingleton<FaceRepository>();

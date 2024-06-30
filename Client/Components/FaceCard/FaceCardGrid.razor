@@ -1,0 +1,45 @@
+﻿@using System.Linq.Expressions
+
+<MudGrid Spacing="2" Justify="Justify.Center">
+    @foreach (var item in Items)
+    {
+        <MudItem @key=item.Key>
+            <FaceCard @ref=Items[item.Key] Id=item.Key OnRemove=@(() => Remove(item.Key)) />
+        </MudItem>
+    }
+</MudGrid>
+
+@code {
+    private readonly Dictionary<Guid, FaceCard> Items = new(){ { Guid.NewGuid(), new() } };
+
+    public void AddNew()
+    {
+        Items.Add(Guid.NewGuid(), new());
+        StateHasChanged();
+    }
+
+    public async Task<bool> ValidateCards()
+    {
+        var valid = true;
+
+        foreach(var item in Items)
+        {
+            var result = await item.Value.Validate();
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    public IEnumerable<TrainFaceModel> GetModels()
+    {
+        foreach (var item in Items)
+            yield return new TrainFaceModel(item.Key, item.Value.Model.Name!);
+    }
+
+    private void Remove(Guid id)
+    {
+        Items.Remove(id);
+        StateHasChanged();
+    }
+}
