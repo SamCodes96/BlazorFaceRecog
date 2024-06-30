@@ -1,3 +1,3 @@
 ﻿namespace BlazorFaceRecog.Server.Dtos;
 
-public record class EmbeddedFaceDto(string Name, float[] Embedding);
+public record class EmbeddedFaceDto(Guid Id, string Name, float[] Embedding);

@@ -21,20 +21,22 @@ public class FaceService(
         return result.Select(x => x.Box).ToArray();
     }
 
-    public string RecogniseInImage(byte[] imageData, Rectangle faceArea)
+    public string RecogniseInImage(byte[] imageData, Rectangle? faceArea = null)
     {
         using var bmImage = GetBitmapImage(imageData);
+        faceArea ??= new Rectangle(0, 0, bmImage.Width, bmImage.Height);
 
-        var embedding = faceLogic.GetEmbedding(bmImage, faceArea);
+        var embedding = faceLogic.GetEmbedding(bmImage, faceArea.Value);
         return faceRepository.GetNearestFace(embedding);
     }
 
-    public void TrainFromImage(TrainFaceData data, Rectangle faceArea)
+    public void TrainFromImage(TrainFaceModel data, byte[] imageData, Rectangle? faceArea = null)
     {
-        using var bmImage = GetBitmapImage(data.ImageData);
+        using var bmImage = GetBitmapImage(imageData);
+        faceArea ??= new Rectangle(0, 0, bmImage.Width, bmImage.Height);
 
-        var embedding = faceLogic.GetEmbedding(bmImage, faceArea);
-        faceRepository.Add(data.Name, embedding);
+        var embedding = faceLogic.GetEmbedding(bmImage, faceArea.Value);
+        faceRepository.Add(data.Id, data.Name, embedding);
     }
 
     public byte[] CropFaceInImage(byte[] imageData, Rectangle faceArea)
