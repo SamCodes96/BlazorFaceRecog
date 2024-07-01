@@ -7,34 +7,33 @@
 <MudPaper class="pa-2" Elevation="0" Style=@($"border: 1px solid var({borderColour})")>
     <MudForm Model=Model @ref=@_form Validation="_validator.ValidateValue">
         <MudStack Spacing="0">
-            <MudIconButton Icon=@Icons.Material.Filled.Close
+            <MudIconButton Icon=@(isDeleted ? Icons.Material.Filled.Refresh : Icons.Material.Filled.Close)
                            Size=@Size.Small
                            Class="align-self-end mb-4"
                            OnClick=@Remove />
             <MudStack Spacing="0" Style="height:86px; align-items:center">
                 <MudElement HtmlTag="div" Style="height: 100%;">
-                    @if (_previewImage != null)
+                    @if (Model.Thumbnail != null)
                     {
-                        <MudImage Src=@($"data:image /jpeg;base64, {_previewImage}") Style="height:100%; aspect-ratio:1/1;" />
+                        <MudImage Src=@($"data:image /jpeg;base64, {Model.Thumbnail}") Style=@($"height:100%; aspect-ratio:1/1; {imageDisabled}") />
                     }
-                    else if (_faceCardState == FaceCardState.Selected)
+                    else if (Model.SelectedFile != null)
                     {
                         <MudStack Spacing="0" Style="height: 100%;">
                             <MudProgressCircular Color=Color.Primary Size=Size.Medium Indeterminate=true Class="my-auto" />
                         </MudStack>
                     }
                     <MudFileUpload T=IBrowserFile
-                                   For=@(() => Model.File)
-                                   @bind-Files=Model.File
+                                   For=@(() => Model.SelectedFile)
+                                   @bind-Files=Model.SelectedFile
                                    @ref=_file
                                    OnFilesChanged=@GetFaceFromImage
                                    ErrorText=@fileErrorText
                                    Error=@(fileErrorText != null)
-                                   Style="align-items:center">
-
-
+                                   Style="align-items:center"
+                                   Accept=".jpg">
                         <ButtonTemplate>
-                            @if (_faceCardState != FaceCardState.Selected)
+                            @if (Model.Thumbnail == null && Model.SelectedFile == null)
                             {
                                 <MudIconButton HtmlTag="label"
                                                Icon=@Icons.Material.Filled.FileOpen
@@ -44,7 +43,7 @@
                         </ButtonTemplate>
                     </MudFileUpload>
                 </MudElement>
-                @if (!_file.HasErrors && _faceCardState == FaceCardState.Unselected)
+                @if (!_file.HasErrors && Model.Thumbnail == null)
                 {
                     <MudText Typo=@Typo.body2
                              Align=@Align.Center>Select an image</MudText>
@@ -54,6 +53,7 @@
                           For=@(() => Model.Name)
                           @bind-Value=Model.Name
                           @ref=_name
+                          Disabled=isDeleted
                           OnBlur=StateHasChanged />
         </MudStack>
     </MudForm>
@@ -61,12 +61,10 @@
 
 @code {
     [Parameter, EditorRequired]
-    public Guid Id { get; set; }
+    public EventCallback OnRemove { get; init; }
 
-    [Parameter, EditorRequired]
-    public EventCallback OnRemove { get; set; }
-
-    public FaceCardModel Model { get; } = new();
+    [Parameter]
+    public FaceCardViewModel Model { get; init; } = new();
 
     private FaceModelFluentValidator _validator = new();
 
@@ -76,15 +74,17 @@
 
     private MudFileUpload<IBrowserFile> _file = new();
 
-    private FaceCardState _faceCardState;
-
-    private string? _previewImage;
-
     private string? _fileFailureErrorOverride;
 
-    private string borderColour => _name.HasErrors || _file.HasErrors
+    private string imageDisabled => isDeleted
+        ? "Opacity: 0.5;"
+        : string.Empty;
+
+    private string borderColour => (_name.HasErrors || _file.HasErrors) && !isDeleted
         ? "--mud-palette-error"
         : "--mud-palette-lines-default";
+
+    private bool isDeleted => Model.State == CardState.Deleted;
 
     private string? fileErrorText => _fileFailureErrorOverride ?? _file.GetErrorText();
 
@@ -103,25 +103,23 @@
 
     private async Task GetFaceFromImage(InputFileChangeEventArgs e)
     {
-        _faceCardState = FaceCardState.Selected;
         _fileFailureErrorOverride = null;
 
         StateHasChanged();
 
         var image = await GetFileContent(e.File);
-        var payload = new DetectFaceModel(Id, image);
+        var payload = new DetectFaceModel(Model.Id, image);
 
         var response = await Http.PostAsJsonAsync("DetectFace", payload);
         var content = await response.Content.ReadAsStringAsync();
 
         if (response.IsSuccessStatusCode)
         {
-            _previewImage = content;
+            Model.Thumbnail = content;
         }
         else
         {
-            Model.File = null;
-            _faceCardState = FaceCardState.Failed;
+            Model.SelectedFile = null;
             _fileFailureErrorOverride = $"Failed: {content}";
         }
 
