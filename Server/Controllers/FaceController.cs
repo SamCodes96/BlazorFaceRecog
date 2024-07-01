@@ -1,4 +1,6 @@
-﻿using BlazorFaceRecog.Server.Services;
+﻿using System.Linq;
+using BlazorFaceRecog.Server.Helpers;
+using BlazorFaceRecog.Server.Services;
 using BlazorFaceRecog.Shared;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,18 +9,38 @@ namespace BlazorFaceRecog.Server.Controllers
     [ApiController]
     public class FaceController(FaceService faceService, CacheService cacheService) : ControllerBase
     {
+        [HttpGet]
+        [Route(nameof(GetSavedFaces))]
+        public IActionResult GetSavedFaces()
+        {
+            var saved = faceService.GetSavedFaces();
+
+            return Ok(saved);
+        }
+
         [HttpPost]
         [Route(nameof(TrainFaces))]
         public IActionResult TrainFaces([FromBody] TrainFaceModel[] faceModels)
         {
-            foreach (var face in faceModels)
+            var existing = faceService.GetSavedFaces().ToArray();
+
+            var existingIds = existing.Select(x => x.Id).ToArray();
+            var newIds = faceModels.Select(x => x.Id).ToArray();
+
+            foreach (var newItem in faceModels.Where(fm => !Array.Exists(existingIds, e => e == fm.Id)))
             {
-                var cachedFace = cacheService.GetFace(face.Id);
+                var cachedFace = cacheService.GetFace(newItem.Id);
                 if (cachedFace == null)
                     break;
 
-                faceService.TrainFromImage(face, cachedFace);
+                faceService.TrainFromImage(newItem, cachedFace);
             }
+
+            foreach (var deletedItem in existingIds.Where(e => !Array.Exists(newIds, fm => fm == e)))
+                faceService.DeleteFace(deletedItem);
+         
+            foreach(var updatedItem in faceModels.Where(e => Array.Exists(existing, fm => fm.Id == e.Id && fm.Name != e.Name)))
+                faceService.UpdateName(updatedItem.Id, updatedItem.Name);
 
             return Ok();
         }
@@ -37,9 +59,11 @@ namespace BlazorFaceRecog.Server.Controllers
 
             var croppedFace = faceService.CropFaceInImage(detectFaceModel.ImageData, faces[0]);
 
-            cacheService.AddFace(detectFaceModel.Id, croppedFace);
+            cacheService.SetFace(detectFaceModel.Id, croppedFace);
 
-            return Content(Convert.ToBase64String(croppedFace));
+            var thumbnail = ImageHelpers.GetThumbnail(croppedFace);
+
+            return Content(thumbnail);
         }
     }
 }

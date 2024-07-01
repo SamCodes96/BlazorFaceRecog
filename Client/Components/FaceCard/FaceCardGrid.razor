@@ -1,31 +1,82 @@
 ﻿@using System.Linq.Expressions
+@using AutoMapper
+
+@inject HttpClient Http
+@inject IMapper Mapper
 
 <MudGrid Spacing="2" Justify="Justify.Center">
-    @foreach (var item in Items)
+    @if (_loadState == GridLoadState.Loaded)
     {
-        <MudItem @key=item.Key>
-            <FaceCard @ref=Items[item.Key] Id=item.Key OnRemove=@(() => Remove(item.Key)) />
-        </MudItem>
+        if (Items.Count > 0)
+        {
+            foreach (var item in Items)
+            {
+                var model = item.Key;
+
+                <MudItem @key=model.Id>
+                    <FaceCard @ref=Items[model] Model=model OnRemove=@(async() => await Remove(model)) />
+                </MudItem>
+            }
+        }
+        else
+        {
+            <MudText Typo=@Typo.body1>No faces saved.</MudText>
+        }
+    }
+    else if (_loadState == GridLoadState.NotLoaded)
+    {
+        <MudProgressCircular Color=Color.Primary Size=Size.Large Indeterminate=true />
+    }
+    else
+    {
+        <MudText Typo=@Typo.body1>Failed to load saved faces.</MudText>
     }
 </MudGrid>
 
 @code {
-    private readonly Dictionary<Guid, FaceCard> Items = new(){ { Guid.NewGuid(), new() } };
+    public GridLoadState _loadState;
+
+    private readonly Dictionary<FaceCardViewModel, FaceCard> Items = [];
+
+    private readonly List<FaceCardViewModel> _initialItems = [];
 
     public void AddNew()
     {
-        Items.Add(Guid.NewGuid(), new());
+        Items.Add(new(), new());
         StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var req = await Http.GetAsync("GetSavedFaces");
+
+        if (req.IsSuccessStatusCode)
+        {
+            var saved = await req.Content.ReadFromJsonAsync<SavedFaceModel[]>() ?? [];
+
+            foreach (var item in saved)
+            {
+                var vm = Mapper.Map<FaceCardViewModel>(item);
+                Items.Add(vm, new());
+                _initialItems.Add(vm);
+            }
+        }
+        else
+        {
+            _loadState = GridLoadState.Errored;
+        }
+
+        _loadState = GridLoadState.Loaded;
     }
 
     public async Task<bool> ValidateCards()
     {
-        var valid = true;
+        bool valid = true;
 
-        foreach(var item in Items)
+        foreach (var item in Items)
         {
             var result = await item.Value.Validate();
-            valid = false;
+            valid &= result;
         }
 
         return valid;
@@ -34,12 +85,37 @@
     public IEnumerable<TrainFaceModel> GetModels()
     {
         foreach (var item in Items)
-            yield return new TrainFaceModel(item.Key, item.Value.Model.Name!);
+        {
+            var model = item.Value.Model;
+            if (model.State != CardState.Deleted)
+                yield return Mapper.Map<TrainFaceModel>(item.Value.Model);
+        }
     }
 
-    private void Remove(Guid id)
+    public bool HasChanges()
     {
-        Items.Remove(id);
+        var current = Items.Select(x => x.Key).ToList();
+
+        return !Enumerable.SequenceEqual(current, _initialItems);
+    }
+
+    private async Task Remove(FaceCardViewModel model)
+    {
+        switch (model.State)
+        {
+            case CardState.Unsaved:
+                Items.Remove(model);
+                break;
+            case CardState.Saved:
+                model.State = CardState.Deleted;
+                await Items[model].Validate();
+                break;
+            case CardState.Deleted:
+                model.State = CardState.Saved;
+                await Items[model].Validate();
+                break;
+        }
+
         StateHasChanged();
     }
 }
