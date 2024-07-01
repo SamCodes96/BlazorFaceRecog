@@ -6,5 +6,9 @@ public abstract class RepositoryBase<T>(IMongoDatabase database, string collecti
 {
     protected IMongoCollection<T> Collection = database.GetCollection<T>(collectionName);
 
-    public long Count => Collection.CountDocuments(Builders<T>.Filter.Empty);
+    protected FilterDefinition<T> NoFilter => Builders<T>.Filter.Empty;
+
+    public long GetCount() => Collection.CountDocuments(NoFilter);
+
+    public IEnumerable<T> GetAllItems() => Collection.Find(NoFilter).ToEnumerable();
 }

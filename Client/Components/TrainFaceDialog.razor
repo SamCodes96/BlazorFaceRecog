@@ -6,18 +6,18 @@
 @inject ISnackbar Snackbar
 @inject HttpClient Http
 
-<MudDialog ContentStyle="max-height:600px; overflow-y:auto;">
+<MudDialog ContentStyle="align-content: center; max-height:600px; overflow-y:auto; min-width:300px; min-height:216px;">
     <DialogContent>
-        <FaceCardGrid @ref=_cardGrid/>
+        <FaceCardGrid @ref=_cardGrid />
     </DialogContent>
     <DialogActions>
         <MudButton OnClick=AddCard
-                    StartIcon=@Icons.Material.Filled.Add
-                    Variant=Variant.Filled
-                    Color=MudBlazor.Color.Primary>Add Face</MudButton>
+                   StartIcon=@Icons.Material.Filled.Add
+                   Variant=Variant.Filled
+                   Color=MudBlazor.Color.Primary>Add Face</MudButton>
         <MudSpacer />
         <MudButton OnClick=Cancel>Cancel</MudButton>
-        <MudButton OnClick=@(async () => await Submit()) Color=Color.Primary>Ok</MudButton>
+        <MudButton OnClick=@(async () => await Submit()) Color=Color.Primary>Save</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -35,16 +35,26 @@
         if (!valid)
             return;
 
+        if (!_cardGrid.HasChanges())
+        {
+            Snackbar.Add("No changes to save.", MudBlazor.Severity.Warning);
+            return;
+        }
+
         var faceModels = _cardGrid.GetModels().ToArray();
 
         var response = await Http.PostAsJsonAsync("TrainFaces", faceModels);
 
         if (response.IsSuccessStatusCode)
         {
-            Snackbar.Add("Faces trained!");
+            Snackbar.Add("Faces updated.", MudBlazor.Severity.Success);
 
             _mudDialog.Close();
-        }        
+        }
+        else
+        {
+            Snackbar.Add("Failed to update. Please try again.", MudBlazor.Severity.Error);
+        }
     }
 
     private void Cancel() => _mudDialog.Cancel();
