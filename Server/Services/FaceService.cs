@@ -8,7 +8,7 @@ using BlazorFaceRecog.Shared;
 namespace BlazorFaceRecog.Server.Services;
 
 public class FaceService(
-    FaceRepository faceRepository,
+    IFaceRepository faceRepository,
     FaceLogic faceLogic)
 {
     public bool FaceIsTrained => faceRepository.GetCount() > 0;
