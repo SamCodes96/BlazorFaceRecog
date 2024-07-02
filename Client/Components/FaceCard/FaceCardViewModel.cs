@@ -3,13 +3,18 @@ using Microsoft.AspNetCore.Components.Forms;
 
 namespace BlazorFaceRecog.Client.Components.FaceCard;
 
-public class FaceCardViewModel
+public class FaceCardViewModel : ICloneable
 {
     public Guid Id { get; init; } = Guid.NewGuid();
     public string? Name { get; set; }
     public IBrowserFile? SelectedFile { get; set; }
     public string? Thumbnail { get; set; }
     public CardState State { get; set; }
+
+    public object Clone()
+    {
+        return MemberwiseClone();
+    }
 }
 
 public class FaceModelFluentValidator : AbstractValidator<FaceCardViewModel>

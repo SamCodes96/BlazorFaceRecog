@@ -3,8 +3,8 @@ using MongoDB.Driver;
 
 namespace BlazorFaceRecog.Server.Repositories;
 
-public class FaceRepository(IMongoDatabase database, IConfiguration configuration)
-    : RepositoryBase<EmbeddedFaceDto>(database, "Faces")
+public class MongoFaceRepository(IMongoDatabase database, IConfiguration configuration)
+    : MongoRepositoryBase<EmbeddedFaceDto>(database, "Faces"), IFaceRepository
 {
     public void Add(Guid id, string name, byte[] image, float[] embedding)
     {
@@ -38,8 +38,13 @@ public class FaceRepository(IMongoDatabase database, IConfiguration configuratio
             .VectorSearch(f => f.Embedding, embedding, 1, searchOptions)
             .Project(Builders<EmbeddedFaceDto>.Projection
                 .Include(f => f.Name))
+            .As<EmbeddedFaceDto>()
             .FirstOrDefault();
 
-        return result?[nameof(EmbeddedFaceDto.Name)]?.AsString ?? "Unknown Face";
+        return result?.Name ?? "Unknown Face";
     }
+
+    public long GetCount() => Collection.CountDocuments(NoFilter);
+
+    public IEnumerable<EmbeddedFaceDto> GetAllItems() => Collection.Find(NoFilter).ToEnumerable();
 }

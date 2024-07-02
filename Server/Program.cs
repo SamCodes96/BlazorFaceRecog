@@ -23,7 +23,6 @@ builder.Services.AddSingleton<CacheService>();
 
 builder.Services.AddSingleton<FaceService>();
 builder.Services.AddSingleton<FaceLogic>();
-builder.Services.AddSingleton<FaceRepository>();
 
 builder.Services.AddSingleton(builder.Configuration.GetValue<bool>("UseGPU")
     ? ONNXOptions.MakeSessionOptionWithCudaProvider()
@@ -33,8 +32,18 @@ builder.Services.AddSingleton<IFace68LandmarksExtractor, Face68LandmarksExtracto
 builder.Services.AddSingleton<IFaceDetector, FaceDetector>();
 builder.Services.AddSingleton<IFaceClassifier, FaceEmbedder>();
 
-var mongoClient = new MongoClient(builder.Configuration.GetConnectionString("MongoDB"));
-builder.Services.AddSingleton(mongoClient.GetDatabase(builder.Configuration.GetSection("MongoDb")["DatabaseName"]));
+var connectionString = builder.Configuration.GetConnectionString("MongoDB");
+if (!string.IsNullOrEmpty(connectionString))
+{
+    builder.Services.AddSingleton<IFaceRepository, MongoFaceRepository>();
+
+    var mongoClient = new MongoClient(connectionString);
+    builder.Services.AddSingleton(mongoClient.GetDatabase(builder.Configuration.GetSection("MongoDb")["DatabaseName"]));
+}
+else
+{
+    builder.Services.AddSingleton<IFaceRepository, InMemoryFaceRepository>();
+}
 
 var app = builder.Build();
 
