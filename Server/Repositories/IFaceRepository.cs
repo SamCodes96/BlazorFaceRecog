@@ -1,4 +1,4 @@
-﻿using BlazorFaceRecog.Server.Dtos;
+﻿using BlazorFaceRecog.Server.Models;
 
 namespace BlazorFaceRecog.Server.Repositories;
 
@@ -10,9 +10,9 @@ public interface IFaceRepository
 
     public void Delete(Guid id);
 
-    public string GetNearestFace(float[] embedding);
+    public DetectedFace GetNearestFace(float[] embedding);
 
     public long GetCount();
 
-    public IEnumerable<EmbeddedFaceDto> GetAllItems();
+    public IEnumerable<EmbeddedFace> GetAllItems();
 }

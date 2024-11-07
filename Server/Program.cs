@@ -4,6 +4,7 @@ using BlazorFaceRecog.Server.Repositories;
 using BlazorFaceRecog.Server.Services;
 using FaceONNX;
 using Microsoft.AspNetCore.ResponseCompression;
+using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 using ONNXOptions = Microsoft.ML.OnnxRuntime.SessionOptions;
 
@@ -38,7 +39,11 @@ if (!string.IsNullOrEmpty(connectionString))
     builder.Services.AddSingleton<IFaceRepository, MongoFaceRepository>();
 
     var mongoClient = new MongoClient(connectionString);
-    builder.Services.AddSingleton(mongoClient.GetDatabase(builder.Configuration.GetSection("MongoDb")["DatabaseName"]));
+    var mongoDatabase = mongoClient.GetDatabase(builder.Configuration.GetSection("MongoDb")["DatabaseName"]);
+    builder.Services.AddSingleton(mongoDatabase);
+
+    // This stops MongoDB throwing an error because there isn't an _id field on the models
+    ConventionRegistry.Register("IgnoreExtraElements", new ConventionPack { new IgnoreExtraElementsConvention(true) }, _ => true);
 }
 else
 {
