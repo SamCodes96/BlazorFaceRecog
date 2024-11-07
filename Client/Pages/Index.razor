@@ -23,7 +23,11 @@
 @if (_isProcessing)
 {
     <MudText Typo=@Typo.subtitle2>
-        Face: @(_analyzedImage?.Name ?? "Not recognised")
+        <p>Face: @(_analyzedImage?.Name ?? "Not recognised")</p>
+        @if(_analyzedImage?.Score is (not null) and > 0)
+        {
+            <p>Score: @_analyzedImage.Score</p>
+        }
     </MudText>
 }
 

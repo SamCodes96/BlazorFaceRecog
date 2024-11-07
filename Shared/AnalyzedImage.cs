@@ -2,4 +2,4 @@
 
 namespace BlazorFaceRecog.Shared;
 
-public record class AnalyzedImage(string Name, Rect Face);
+public record class AnalyzedImage(string Name, float Score, Rect Face);
