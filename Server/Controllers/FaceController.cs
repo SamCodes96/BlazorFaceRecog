@@ -38,7 +38,7 @@ namespace BlazorFaceRecog.Server.Controllers
 
             foreach (var deletedItem in existingIds.Where(e => !Array.Exists(newIds, fm => fm == e)))
                 faceService.DeleteFace(deletedItem);
-         
+
             foreach(var updatedItem in faceModels.Where(e => Array.Exists(existing, fm => fm.Id == e.Id && fm.Name != e.Name)))
                 faceService.UpdateName(updatedItem.Id, updatedItem.Name);
 
