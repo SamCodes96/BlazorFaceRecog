@@ -43,5 +43,4 @@
         var base64Data = Regex.Match(dataUrl, "data:image/(?<type>.+?),(?<data>.+)").Groups["data"].Value;
         return Convert.FromBase64String(base64Data);
     }
-
 }
