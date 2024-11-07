@@ -2,6 +2,7 @@
 using System.Drawing.Imaging;
 using BlazorFaceRecog.Server.Helpers;
 using BlazorFaceRecog.Server.Logic;
+using BlazorFaceRecog.Server.Models;
 using BlazorFaceRecog.Server.Repositories;
 using BlazorFaceRecog.Shared;
 
@@ -27,7 +28,7 @@ public class FaceService(
         return result.Select(x => x.Box).ToArray();
     }
 
-    public string RecogniseInImage(byte[] imageData, Rectangle? faceArea = null)
+    public DetectedFace RecogniseInImage(byte[] imageData, Rectangle? faceArea = null)
     {
         using var bmImage = ImageHelpers.GetBitmapImage(imageData);
         faceArea ??= new Rectangle(0, 0, bmImage.Width, bmImage.Height);
