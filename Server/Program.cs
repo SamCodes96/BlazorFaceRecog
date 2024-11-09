@@ -1,3 +1,4 @@
+using BlazorFaceRecog.Server.Configuration;
 using BlazorFaceRecog.Server.Hubs;
 using BlazorFaceRecog.Server.Logic;
 using BlazorFaceRecog.Server.Repositories;
@@ -33,13 +34,14 @@ builder.Services.AddSingleton<IFace68LandmarksExtractor, Face68LandmarksExtracto
 builder.Services.AddSingleton<IFaceDetector, FaceDetector>();
 builder.Services.AddSingleton<IFaceClassifier, FaceEmbedder>();
 
-var connectionString = builder.Configuration.GetConnectionString("MongoDB");
-if (!string.IsNullOrEmpty(connectionString))
+var mongoSettings = builder.Configuration.GetSection("MongoDB").Get<MongoDBSettings>();
+if (mongoSettings is not null)
 {
+    builder.Services.AddSingleton(mongoSettings);
     builder.Services.AddSingleton<IFaceRepository, MongoFaceRepository>();
 
-    var mongoClient = new MongoClient(connectionString);
-    var mongoDatabase = mongoClient.GetDatabase(builder.Configuration.GetSection("MongoDb")["DatabaseName"]);
+    var mongoClient = new MongoClient(mongoSettings.ConnectionString);
+    var mongoDatabase = mongoClient.GetDatabase(mongoSettings.DatabaseName);
     builder.Services.AddSingleton(mongoDatabase);
 
     // This stops MongoDB throwing an error because there isn't an _id field on the models

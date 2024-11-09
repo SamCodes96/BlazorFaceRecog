@@ -1,10 +1,11 @@
-﻿using BlazorFaceRecog.Server.Models;
+﻿using BlazorFaceRecog.Server.Configuration;
+using BlazorFaceRecog.Server.Models;
 using MongoDB.Driver;
 
 namespace BlazorFaceRecog.Server.Repositories;
 
-public class MongoFaceRepository(IMongoDatabase database, IConfiguration configuration)
-    : MongoRepositoryBase<EmbeddedFace>(database, "Faces"), IFaceRepository
+public class MongoFaceRepository(IMongoDatabase database, MongoDBSettings mongoSettings)
+    : MongoRepositoryBase<EmbeddedFace>(database, mongoSettings.CollectionName), IFaceRepository
 {
     public void Add(Guid id, string name, byte[] image, float[] embedding)
     {
@@ -30,7 +31,7 @@ public class MongoFaceRepository(IMongoDatabase database, IConfiguration configu
     {
         var searchOptions = new VectorSearchOptions<EmbeddedFace>()
         {
-            IndexName = configuration.GetSection("MongoDB")["SearchIndexName"],
+            IndexName = mongoSettings.SearchIndexName,
             NumberOfCandidates = (int)GetCount()
         };
 
