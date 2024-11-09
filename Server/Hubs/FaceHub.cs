@@ -7,7 +7,7 @@ namespace BlazorFaceRecog.Server.Hubs;
 
 public class FaceHub(FaceService faceRecognitionService, IConfiguration configuration) : Hub
 {
-    private readonly int _threshold = configuration.GetValue<int?>("Threshold") ?? int.MaxValue;
+    private readonly int _threshold = configuration.GetValue<int?>("Threshold") ?? 0;
 
     public async Task RecogniseInImage(byte[] data)
     {
@@ -27,7 +27,7 @@ public class FaceHub(FaceService faceRecognitionService, IConfiguration configur
 
         var detectedFace = faceRecognitionService.RecogniseInImage(data, faces[0]);
 
-        if (_threshold > detectedFace.Score)
+        if (_threshold > (detectedFace?.Score ?? 0))
         {
             await DetectedUnknownFace(faces[0]);
             return;
