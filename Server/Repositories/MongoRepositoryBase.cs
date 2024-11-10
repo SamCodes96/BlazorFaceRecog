@@ -2,7 +2,7 @@
 
 namespace BlazorFaceRecog.Server.Repositories;
 
-public abstract class MongoRepositoryBase<T>(IMongoDatabase database, string? collectionName)
+public abstract class MongoRepositoryBase<T>(IMongoDatabase database, string collectionName)
 {
     protected IMongoCollection<T> Collection = database.GetCollection<T>(collectionName);
 

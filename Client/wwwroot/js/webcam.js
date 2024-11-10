@@ -1,23 +1,23 @@
-﻿function startVideo(src) {
+﻿async function startVideo(src) {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({
+        const stream = await navigator.mediaDevices.getUserMedia({
             video: {
                 facingMode: { ideal: "user" },
                 width: { min: 480, ideal: 1920, max: 1920 },
             }
-        }).then(function (stream) {
-            const video = document.getElementById(src);
+        });
 
-            if ("srcObject" in video) {
-                video.srcObject = stream;
-            } else {
-                video.src = window.URL.createObjectURL(stream);
-            }
+        const video = document.getElementById(src);
 
-            video.onloadedmetadata = (_) => {
-                video.play();
-            };
-        }).catch();
+        if ("srcObject" in video) {
+            video.srcObject = stream;
+        } else {
+            video.src = window.URL.createObjectURL(stream);
+        }
+
+        video.onloadedmetadata = (_) => {
+            video.play();
+        };
     }
 }
 
