@@ -33,7 +33,7 @@ public class FaceHub(FaceService faceRecognitionService, IConfiguration configur
             return;
         }
 
-        await Clients.Caller.SendAsync("ImageAnalyzed", new AnalyzedImage(detectedFace.Name, detectedFace.Score, faces[0]));
+        await Clients.Caller.SendAsync("ImageAnalyzed", new AnalyzedImage(detectedFace!.Name, detectedFace.Score, faces[0]));
     }
 
     private Task DetectedUnknownFace(Rectangle face) => Clients.Caller.SendAsync("ImageAnalyzed", new AnalyzedImage("Unknown Face", 0, face));
