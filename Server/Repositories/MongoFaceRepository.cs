@@ -5,7 +5,7 @@ using MongoDB.Driver;
 namespace BlazorFaceRecog.Server.Repositories;
 
 public class MongoFaceRepository(IMongoDatabase database, MongoDBSettings mongoSettings)
-    : MongoRepositoryBase<EmbeddedFace>(database, mongoSettings.CollectionName), IFaceRepository
+    : MongoRepositoryBase<EmbeddedFace>(database, mongoSettings.CollectionName!), IFaceRepository
 {
     public void Add(Guid id, string name, byte[] image, float[] embedding)
     {
