@@ -31,8 +31,7 @@
 
     private async Task Submit()
     {
-        var valid = await _cardGrid.ValidateCards();
-        if (!valid)
+        if (!await _cardGrid.ValidateCards())
             return;
 
         if (!_cardGrid.HasChanges())
@@ -43,7 +42,7 @@
 
         var faceModels = _cardGrid.GetModels().ToArray();
 
-        var response = await Http.PostAsJsonAsync("TrainFaces", faceModels);
+        var response = await Http.PostAsJsonAsync("Faces/Train", faceModels);
 
         if (response.IsSuccessStatusCode)
         {

@@ -10,9 +10,9 @@ public interface IFaceRepository
 
     public void Delete(Guid id);
 
-    public DetectedFace GetNearestFace(float[] embedding);
+    public DetectedFace GetNearest(float[] embedding);
 
     public long GetCount();
 
-    public IEnumerable<EmbeddedFace> GetAllItems();
+    public IEnumerable<EmbeddedFace> GetAll();
 }

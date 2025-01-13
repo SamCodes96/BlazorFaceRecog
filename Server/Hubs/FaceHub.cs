@@ -13,7 +13,7 @@ public class FaceHub(FaceService faceRecognitionService, IConfiguration configur
     {
         var faces = faceRecognitionService.DetectInImage(data);
 
-        if (faces?.Length is null or 0)
+        if (faces?.FirstOrDefault() is not Rectangle detectedFace)
         {
             await Clients.Caller.SendAsync("ImageAnalyzed", null);
             return;
@@ -21,19 +21,19 @@ public class FaceHub(FaceService faceRecognitionService, IConfiguration configur
 
         if (!faceRecognitionService.FaceIsTrained)
         {
-            await DetectedUnknownFace(faces[0]);
+            await DetectedUnknownFace(detectedFace);
             return;
         }
 
-        var detectedFace = faceRecognitionService.RecogniseInImage(data, faces[0]);
+        var recognisedFace = faceRecognitionService.RecogniseInImage(data, detectedFace);
 
-        if (_threshold > (detectedFace?.Score ?? 0))
+        if (_threshold > (recognisedFace?.Score ?? 0))
         {
-            await DetectedUnknownFace(faces[0]);
+            await DetectedUnknownFace(detectedFace);
             return;
         }
 
-        await Clients.Caller.SendAsync("ImageAnalyzed", new AnalyzedImage(detectedFace!.Name, detectedFace.Score, faces[0]));
+        await Clients.Caller.SendAsync("ImageAnalyzed", new AnalyzedImage(recognisedFace!.Name, recognisedFace.Score, detectedFace));
     }
 
     private Task DetectedUnknownFace(Rectangle face) => Clients.Caller.SendAsync("ImageAnalyzed", new AnalyzedImage("Unknown Face", 0, face));

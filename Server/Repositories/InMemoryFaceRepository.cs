@@ -14,20 +14,18 @@ public class InMemoryFaceRepository : IFaceRepository
 
     public void Update(Guid id, string name)
     {
-        var face = _faces.SingleOrDefault(x => x.Id == id);
+        var face = _faces.SingleOrDefault(f => f.Id == id);
 
-        if (face == null)
-            return;
-
-        face.Name = name;
+        if (face != null)
+            face.Name = name;
     }
 
     public void Delete(Guid id)
     {
-        _faces.RemoveAll(x => x.Id == id);
+        _faces.RemoveAll(f => f.Id == id);
     }
 
-    public DetectedFace GetNearestFace(float[] embedding)
+    public DetectedFace GetNearest(float[] embedding)
     {
         var Max = float.MinValue;
         string nearest = string.Empty;
@@ -49,5 +47,5 @@ public class InMemoryFaceRepository : IFaceRepository
 
     public long GetCount() => _faces.Count;
 
-    public IEnumerable<EmbeddedFace> GetAllItems() => _faces;
+    public IEnumerable<EmbeddedFace> GetAll() => _faces;
 }
