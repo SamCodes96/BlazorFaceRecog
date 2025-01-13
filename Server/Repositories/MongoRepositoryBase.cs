@@ -6,5 +6,5 @@ public abstract class MongoRepositoryBase<T>(IMongoDatabase database, string col
 {
     protected IMongoCollection<T> Collection = database.GetCollection<T>(collectionName);
 
-    protected FilterDefinition<T> NoFilter => Builders<T>.Filter.Empty;
+    protected static FilterDefinition<T> NoFilter => Builders<T>.Filter.Empty;
 }

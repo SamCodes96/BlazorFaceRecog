@@ -8,10 +8,7 @@ public class FaceLogic(
     IFaceDetector detector,
     IFaceClassifier classifier)
 {
-    public FaceDetectionResult[] Detect(Bitmap image)
-    {
-        return detector.Forward(image);
-    }
+    public FaceDetectionResult[] Detect(Bitmap image) => detector.Forward(image);
 
     public float[] GetEmbedding(Bitmap image, Rectangle faceArea)
     {
