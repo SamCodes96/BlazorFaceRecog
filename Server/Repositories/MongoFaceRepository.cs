@@ -14,20 +14,20 @@ public class MongoFaceRepository(IMongoDatabase database, MongoDBSettings mongoS
 
     public void Update(Guid id, string name)
     {
-        var filter = Builders<EmbeddedFace>.Filter.Eq(x => x.Id, id);
-        var update = Builders<EmbeddedFace>.Update.Set(x => x.Name, name);
+        var filter = Builders<EmbeddedFace>.Filter.Eq(f => f.Id, id);
+        var update = Builders<EmbeddedFace>.Update.Set(f => f.Name, name);
 
         Collection.UpdateOne(filter, update);
     }
 
     public void Delete(Guid id)
     {
-        var filter = Builders<EmbeddedFace>.Filter.Eq(x => x.Id, id);
+        var filter = Builders<EmbeddedFace>.Filter.Eq(f => f.Id, id);
 
         Collection.DeleteOne(filter);
     }
 
-    public DetectedFace GetNearestFace(float[] embedding)
+    public DetectedFace GetNearest(float[] embedding)
     {
         var searchOptions = new VectorSearchOptions<EmbeddedFace>()
         {
@@ -38,7 +38,7 @@ public class MongoFaceRepository(IMongoDatabase database, MongoDBSettings mongoS
         return Collection.Aggregate()
             .VectorSearch(f => f.Embedding, embedding, 1, searchOptions)
             .Project(Builders<EmbeddedFace>.Projection
-                .Include(x => x.Name)
+                .Include(f => f.Name)
                 .Meta(nameof(DetectedFace.Score), "vectorSearchScore"))
             .As<DetectedFace>()
             .FirstOrDefault();
@@ -46,5 +46,5 @@ public class MongoFaceRepository(IMongoDatabase database, MongoDBSettings mongoS
 
     public long GetCount() => Collection.CountDocuments(NoFilter);
 
-    public IEnumerable<EmbeddedFace> GetAllItems() => Collection.Find(NoFilter).ToEnumerable();
+    public IEnumerable<EmbeddedFace> GetAll() => Collection.Find(NoFilter).ToEnumerable();
 }

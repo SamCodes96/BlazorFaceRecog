@@ -110,7 +110,7 @@
         var image = await GetFileContent(e.File);
         var payload = new DetectFaceModel(Model.Id, image);
 
-        var response = await Http.PostAsJsonAsync("DetectFace", payload);
+        var response = await Http.PostAsJsonAsync("Faces/Detect", payload);
         var content = await response.Content.ReadAsStringAsync();
 
         if (response.IsSuccessStatusCode)
