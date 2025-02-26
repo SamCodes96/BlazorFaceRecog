@@ -32,15 +32,14 @@
                                    Error=@(fileErrorText != null)
                                    Style="align-items:center"
                                    Accept=".jpg">
-                        <ButtonTemplate>
+                        <ActivatorContent>
                             @if (Model.Thumbnail == null && Model.SelectedFile == null)
                             {
                                 <MudIconButton HtmlTag="label"
                                                Icon=@Icons.Material.Filled.FileOpen
-                                               Size=@Size.Large
-                                               for=@context.Id />
+                                               Size=@Size.Large/>
                             }
-                        </ButtonTemplate>
+                        </ActivatorContent>
                     </MudFileUpload>
                 </MudElement>
                 @if (!_file.HasErrors && Model.Thumbnail == null)

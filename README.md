@@ -55,5 +55,5 @@ The search index on the collection must be of type `vectorSearch` and should hav
 ### TODO
 - [x] MongoDB support
 - [x] Upgrade to .NET 9.0
+- [x] Upgrade MudBlazor to 8.X
 - [ ] Unit tests
-- [ ] Upgrade MudBlazor from 6.X
