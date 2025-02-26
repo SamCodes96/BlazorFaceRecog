@@ -12,9 +12,9 @@
     </DialogContent>
     <DialogActions>
         <MudButton OnClick=AddCard
-                   StartIcon=@Icons.Material.Filled.Add
-                   Variant=Variant.Filled
-                   Color=MudBlazor.Color.Primary>Add Face</MudButton>
+        StartIcon=@Icons.Material.Filled.Add
+        Variant=Variant.Filled
+        Color=MudBlazor.Color.Primary>Add Face</MudButton>
         <MudSpacer />
         <MudButton OnClick=Cancel>Cancel</MudButton>
         <MudButton OnClick=@(async () => await Submit()) Color=Color.Primary>Save</MudButton>
@@ -25,7 +25,7 @@
     public static string Title = "Train faces";
 
     [CascadingParameter]
-    private MudDialogInstance _mudDialog { get; set; } = new();
+    private IMudDialogInstance _mudDialog { get; set; } = null!;
 
     private FaceCardGrid _cardGrid = new();
 

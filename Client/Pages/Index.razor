@@ -14,7 +14,7 @@
                Color=MudBlazor.Color.Primary
                Variant=Variant.Filled>@(!_isProcessing ? "Start" : "Stop")</MudButton>
 
-    <MudButton OnClick=OpenTrainDialog
+    <MudButton OnClick=OpenTrainDialogAsync
                Disabled=_isProcessing
                Color=MudBlazor.Color.Primary
                Variant=Variant.Filled>Train</MudButton>
@@ -86,8 +86,8 @@
         }
     }
 
-    private void OpenTrainDialog()
+    private async Task OpenTrainDialogAsync()
     {
-        DialogService.Show<TrainFaceDialog>(TrainFaceDialog.Title);
+        await DialogService.ShowAsync<TrainFaceDialog>(TrainFaceDialog.Title);
     }
 }
