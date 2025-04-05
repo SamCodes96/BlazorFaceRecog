@@ -8,14 +8,14 @@
 <MudGrid Spacing="2" Justify="Justify.Center">
     @if (_loadState == GridLoadState.Loaded)
     {
-        if (Items.Count > 0)
+        if (_items.Count > 0)
         {
-            foreach (var item in Items)
+            foreach (var item in _items)
             {
                 var model = item.Key;
 
                 <MudItem @key=model.Id>
-                    <FaceCard @ref=Items[model] Model=model OnRemove=@(async() => await Remove(model)) />
+                    <FaceCard @ref=_items[model] Model=model OnRemove=@(async() => await Remove(model)) />
                 </MudItem>
             }
         }
@@ -37,13 +37,13 @@
 @code {
     public GridLoadState _loadState;
 
-    private readonly Dictionary<FaceCardViewModel, FaceCard> Items = [];
+    private readonly Dictionary<FaceCardViewModel, FaceCard> _items = [];
 
     private readonly List<FaceCardViewModel> _initialItems = [];
 
     public void AddNew()
     {
-        Items.Add(new(), new());
+        _items.Add(new(), new());
         StateHasChanged();
     }
 
@@ -52,7 +52,6 @@
         try
         {
             var req = await Http.GetAsync("Faces/Saved");
-
             req.EnsureSuccessStatusCode();
 
             var saved = await req.Content.ReadFromJsonAsync<SavedFaceModel[]>() ?? [];
@@ -60,24 +59,26 @@
             foreach (var item in saved)
             {
                 var vm = Mapper.Map<FaceCardViewModel>(item);
-                Items.Add(vm, new());
+                _items.Add(vm, new());
 
                 _initialItems.Add((FaceCardViewModel)vm.Clone());
             }
+
+            _loadState = GridLoadState.Loaded;
         }
         catch
         {
             _loadState = GridLoadState.Errored;
         }
 
-        _loadState = GridLoadState.Loaded;
+        StateHasChanged();
     }
 
     public async Task<bool> ValidateCards()
     {
         bool valid = true;
 
-        foreach (var item in Items)
+        foreach (var item in _items)
         {
             var result = await item.Value.Validate();
             valid &= result;
@@ -88,7 +89,7 @@
 
     public IEnumerable<TrainFaceModel> GetModels()
     {
-        foreach (var item in Items)
+        foreach (var item in _items)
         {
             var model = item.Value.Model;
             if (model.State != CardState.Deleted)
@@ -98,7 +99,7 @@
 
     public bool HasChanges()
     {
-        var current = Items.Select(x => x.Value.Model);
+        var current = _items.Select(x => x.Value.Model);
 
         return !Enumerable.SequenceEqual(current, _initialItems);
     }
@@ -108,15 +109,15 @@
         switch (model.State)
         {
             case CardState.Unsaved:
-                Items.Remove(model);
+                _items.Remove(model);
                 break;
             case CardState.Saved:
                 model.State = CardState.Deleted;
-                await Items[model].Validate();
+                await _items[model].Validate();
                 break;
             case CardState.Deleted:
                 model.State = CardState.Saved;
-                await Items[model].Validate();
+                await _items[model].Validate();
                 break;
         }
 

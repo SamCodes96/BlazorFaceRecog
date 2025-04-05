@@ -42,7 +42,7 @@ public class InMemoryFaceRepository : IFaceRepository
         }
 
         var score = (1 + Max) / 2;
-        return new DetectedFace(nearest, score);
+        return new DetectedFace { Name = nearest, Score = score };
     }
 
     public long GetCount() => _faces.Count;

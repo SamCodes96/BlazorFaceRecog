@@ -2,20 +2,13 @@
 
 public record class DetectedFace
 {
-    public DetectedFace(string name, float score)
+    public required string Name { get; init; }
+    public required float Score
     {
-        Name = name;
-        Score = score;
-    }
-
-    private float _percentageScore;
-
-    public string Name { get; set; }
-    public float Score
-    {
-        get => _percentageScore;
-        set => _percentageScore = value < 1
-            ? value * 100
-            : value;
+        get;
+        init
+        {
+            field = value < 1 ? value * 100 : value;
+        }
     }
 }

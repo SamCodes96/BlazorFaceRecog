@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using BlazorFaceRecog.Server.Models;
 using BlazorFaceRecog.Server.Services;
 using BlazorFaceRecog.Shared;
 using Microsoft.AspNetCore.SignalR;
@@ -27,14 +28,18 @@ public class FaceHub(FaceService faceRecognitionService, IConfiguration configur
 
         var recognisedFace = faceRecognitionService.RecogniseInImage(data, detectedFace);
 
-        if (_threshold > (recognisedFace?.Score ?? 0))
+        if (recognisedFace?.Score is not float score || score < _threshold)
         {
             await DetectedUnknownFace(detectedFace);
             return;
         }
 
-        await Clients.Caller.SendAsync("ImageAnalyzed", new AnalyzedImage(recognisedFace!.Name, recognisedFace.Score, detectedFace));
+        await DetectedKnownFace(detectedFace, recognisedFace);
     }
 
-    private Task DetectedUnknownFace(Rectangle face) => Clients.Caller.SendAsync("ImageAnalyzed", new AnalyzedImage("Unknown Face", 0, face));
+    private async Task DetectedKnownFace(Rectangle detectedFace, DetectedFace recognisedFace)
+        => await Clients.Caller.SendAsync("ImageAnalyzed", new AnalyzedImage(recognisedFace.Name, recognisedFace.Score, detectedFace));
+
+    private async Task DetectedUnknownFace(Rectangle detectedFace)
+        => await Clients.Caller.SendAsync("ImageAnalyzed", new AnalyzedImage("Unknown Face", 0, detectedFace));
 }

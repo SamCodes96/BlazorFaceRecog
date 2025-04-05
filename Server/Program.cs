@@ -21,24 +21,24 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<CacheService>();
+builder.Services.AddSingleton<FaceCache>();
 
-builder.Services.AddSingleton<FaceService>();
-builder.Services.AddSingleton<FaceLogic>();
+builder.Services.AddScoped<FaceService>();
+builder.Services.AddScoped<FaceLogic>();
 
 builder.Services.AddSingleton(builder.Configuration.GetValue<bool>("UseGPU")
     ? ONNXOptions.MakeSessionOptionWithCudaProvider()
     : new ONNXOptions());
 
-builder.Services.AddSingleton<IFace68LandmarksExtractor, Face68LandmarksExtractor>();
-builder.Services.AddSingleton<IFaceDetector, FaceDetector>();
-builder.Services.AddSingleton<IFaceClassifier, FaceEmbedder>();
+builder.Services.AddScoped<IFace68LandmarksExtractor, Face68LandmarksExtractor>();
+builder.Services.AddScoped<IFaceDetector, FaceDetector>();
+builder.Services.AddScoped<IFaceClassifier, FaceEmbedder>();
 
 var mongoSettings = builder.Configuration.GetSection("MongoDB").Get<MongoDBSettings>();
 if (mongoSettings is not null)
 {
     builder.Services.AddSingleton(mongoSettings);
-    builder.Services.AddSingleton<IFaceRepository, MongoFaceRepository>();
+    builder.Services.AddTransient<IFaceRepository, MongoFaceRepository>();
 
     var mongoClient = new MongoClient(mongoSettings.ConnectionString);
     var mongoDatabase = mongoClient.GetDatabase(mongoSettings.DatabaseName);
@@ -75,4 +75,4 @@ app.MapControllers();
 app.MapRazorPages();
 app.MapFallbackToFile("index.html");
 
-app.Run();
+await app.RunAsync();
