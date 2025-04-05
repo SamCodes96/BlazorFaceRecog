@@ -37,7 +37,7 @@
                             {
                                 <MudIconButton HtmlTag="label"
                                                Icon=@Icons.Material.Filled.FileOpen
-                                               Size=@Size.Large/>
+                                               Size=@Size.Large />
                             }
                         </ActivatorContent>
                     </MudFileUpload>
@@ -58,7 +58,8 @@
     </MudForm>
 </MudPaper>
 
-@code {
+@code
+{
     [Parameter, EditorRequired]
     public EventCallback OnRemove { get; init; }
 
