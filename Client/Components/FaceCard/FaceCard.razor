@@ -4,23 +4,33 @@
 
 @inject HttpClient Http
 
-<MudPaper class="pa-2" Elevation="0" Style=@($"border: 1px solid var({borderColour})")>
-    <MudForm Model=Model @ref=@_form Validation="_validator.ValidateValue">
+<MudPaper class="pa-2" 
+          Elevation="0" 
+          Style=@($"border: 1px solid var({borderColour})")>
+    <MudForm Model=Model @ref=@_form 
+             Validation="_validator.ValidateValue">
         <MudStack Spacing="0">
             <MudIconButton Icon=@(isDeleted ? Icons.Material.Filled.Refresh : Icons.Material.Filled.Close)
                            Size=@Size.Small
                            Class="align-self-end mb-4"
                            OnClick=@Remove />
-            <MudStack Spacing="0" Style="height:86px; align-items:center">
-                <MudElement HtmlTag="div" Style="height: 100%;">
+            <MudStack Spacing="0" 
+                      Style="height:86px; align-items:center">
+                <MudElement HtmlTag="div" 
+                            Style="height: 100%;">
                     @if (Model.Thumbnail != null)
                     {
-                        <MudImage Src=@($"data:image /jpeg;base64, {Model.Thumbnail}") Style=@($"height:100%; aspect-ratio:1/1; {imageDisabled}") />
+                        <MudImage Src=@($"data:image /jpeg;base64, {Model.Thumbnail}") 
+                                  Style=@($"height:100%; aspect-ratio:1/1; {imageDisabled}") />
                     }
                     else if (Model.SelectedFile != null)
                     {
-                        <MudStack Spacing="0" Style="height: 100%;">
-                            <MudProgressCircular Color=Color.Primary Size=Size.Medium Indeterminate=true Class="my-auto" />
+                        <MudStack Spacing="0" 
+                                  Style="height: 100%;">
+                            <MudProgressCircular Color=Color.Primary 
+                                                 Size=Size.Medium 
+                                                 Indeterminate=true 
+                                                 Class="my-auto" />
                         </MudStack>
                     }
                     <MudFileUpload T=IBrowserFile

@@ -15,10 +15,8 @@ public class FaceLogic(
         if (faceArea.IsEmpty)
             return new float[512];
 
-        // landmarks
         var points = extractor.Forward(image, faceArea);
 
-        // alignment
         using var aligned = image.Align(faceArea, points.RotationAngle);
         return classifier.Forward(aligned);
     }

@@ -24,7 +24,7 @@ public class FaceController(FaceService faceService, FaceCache cacheService) : C
     {
         var existingIds = faceService.GetSaved().Select(f => f.Id).ToList();
 
-        var updatedFaces = new List<Guid>();
+        var updatedFaceIds = new List<Guid>();
 
         foreach (var face in faceModels)
         {
@@ -35,12 +35,12 @@ public class FaceController(FaceService faceService, FaceCache cacheService) : C
             }
             else
             {
-                updatedFaces.Add(face.Id);
+                updatedFaceIds.Add(face.Id);
                 faceService.UpdateName(face.Id, face.Name);
             }
         }
 
-        foreach (var deletedItem in existingIds.Except(updatedFaces))
+        foreach (var deletedItem in existingIds.Except(updatedFaceIds))
             faceService.DeleteFace(deletedItem);
 
         return Ok();
