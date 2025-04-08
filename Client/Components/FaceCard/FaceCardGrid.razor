@@ -5,7 +5,8 @@
 @inject HttpClient Http
 @inject IMapper Mapper
 
-<MudGrid Spacing="2" Justify="Justify.Center">
+<MudGrid Spacing="2" 
+         Justify="Justify.Center">
     @if (_loadState == GridLoadState.Loaded)
     {
         if (_items.Count > 0)
@@ -26,7 +27,9 @@
     }
     else if (_loadState == GridLoadState.NotLoaded)
     {
-        <MudProgressCircular Color=Color.Primary Size=Size.Large Indeterminate=true />
+        <MudProgressCircular Color=Color.Primary 
+                             Size=Size.Large 
+                             Indeterminate=true />
     }
     else
     {
@@ -35,7 +38,7 @@
 </MudGrid>
 
 @code {
-    public GridLoadState _loadState;
+    private GridLoadState _loadState;
 
     private readonly Dictionary<FaceCardViewModel, FaceCard> _items = [];
 

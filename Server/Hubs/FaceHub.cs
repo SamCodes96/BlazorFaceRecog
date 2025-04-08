@@ -8,7 +8,7 @@ namespace BlazorFaceRecog.Server.Hubs;
 
 public class FaceHub(FaceService faceRecognitionService, IConfiguration configuration) : Hub
 {
-    private readonly int _threshold = configuration.GetValue<int?>("Threshold") ?? 0;
+    private readonly int _threshold = configuration.GetValue<int>("Threshold");
 
     public async Task RecogniseInImage(byte[] data)
     {

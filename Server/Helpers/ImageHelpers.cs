@@ -18,8 +18,8 @@ public static class ImageHelpers
         using var bmImage = GetBitmapImage(imageData);
 
         using var croppedImage = new Bitmap(bmImage.Width, bmImage.Height);
-        using Graphics g = Graphics.FromImage(croppedImage);
-        g.DrawImage(
+        using var graphics = Graphics.FromImage(croppedImage);
+        graphics.DrawImage(
             bmImage,
             new Rectangle(0, 0, croppedImage.Width, croppedImage.Height),
             faceArea,

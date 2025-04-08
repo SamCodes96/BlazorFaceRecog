@@ -17,7 +17,8 @@
                    Color=MudBlazor.Color.Primary>Add Face</MudButton>
         <MudSpacer />
         <MudButton OnClick=Cancel>Cancel</MudButton>
-        <MudButton OnClick=@(async () => await Submit()) Color=Color.Primary>Save</MudButton>
+        <MudButton OnClick=@(async () => await Submit()) 
+                   Color=Color.Primary>Save</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -26,7 +27,7 @@
     public static string Title = "Train faces";
 
     [CascadingParameter]
-    private IMudDialogInstance _mudDialog { get; set; } = null!;
+    public IMudDialogInstance MudDialog { get; set; } = null!;
 
     private FaceCardGrid _cardGrid = new();
 
@@ -44,20 +45,18 @@
         var faceModels = _cardGrid.GetModels().ToArray();
 
         var response = await Http.PostAsJsonAsync("Faces/Train", faceModels);
-
-        if (response.IsSuccessStatusCode)
-        {
-            Snackbar.Add("Faces updated.", MudBlazor.Severity.Success);
-
-            _mudDialog.Close();
-        }
-        else
+        if (!response.IsSuccessStatusCode)
         {
             Snackbar.Add("Failed to update. Please try again.", MudBlazor.Severity.Error);
+            return;
         }
+
+        Snackbar.Add("Faces updated.", MudBlazor.Severity.Success);
+
+        MudDialog.Close();
     }
 
-    private void Cancel() => _mudDialog.Cancel();
+    private void Cancel() => MudDialog.Cancel();
 
     private void AddCard() => _cardGrid.AddNew();
 }
