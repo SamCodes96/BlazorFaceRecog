@@ -25,6 +25,4 @@ builder.Services.AddMudServices(config =>
     };
 });
 
-builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-
 await builder.Build().RunAsync();

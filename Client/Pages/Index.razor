@@ -8,23 +8,26 @@
 
 <PageTitle>Blazor Face Recog</PageTitle>
 
-<CameraFeed @ref=_cameraFeed />
-<MudStack Row=true>
-    <MudButton OnClick=@(() => StartStopProcessing())
-               Color=MudBlazor.Color.Primary
-               Variant=Variant.Filled>@(!_isProcessing ? "Start" : "Stop")</MudButton>
+<CameraFeed @ref=_cameraFeed OnWebcamStart=@StateHasChanged />
+@if(_cameraFeed?.WebcamStarted ?? false)
+{
+    <MudStack Row=true>
+        <MudButton OnClick=@(() => StartStopProcessingAsync())
+                   Color=MudBlazor.Color.Primary
+                   Variant=Variant.Filled>@(!_detectionActive ? "Start" : "Stop")</MudButton>
 
-    <MudButton OnClick=OpenTrainDialogAsync
-               Disabled=_isProcessing
-               Color=MudBlazor.Color.Primary
-               Variant=Variant.Filled>Train</MudButton>
-</MudStack>
+        <MudButton OnClick=OpenTrainDialogAsync
+                   Disabled=_detectionActive
+                   Color=MudBlazor.Color.Primary
+                   Variant=Variant.Filled>Train</MudButton>
+    </MudStack>
+}
 
-@if (_isProcessing)
+@if (_detectionActive)
 {
     <MudText Typo=@Typo.subtitle2>
-        <p>Face: @(_analyzedImage?.Name ?? "Not recognised")</p>
-        @if(_analyzedImage?.Score is (not null) and > 0)
+        <p>Face: @(_analyzedImage?.Name ?? "No Face Detected")</p>
+        @if(_analyzedImage?.Score is > 0)
         {
             <p>Score: @_analyzedImage.Score</p>
         }
@@ -32,11 +35,11 @@
 }
 
 @code {
-    private CameraFeed _cameraFeed = new();
+    private CameraFeed _cameraFeed = default!;
+
+    private bool _detectionActive;
 
     private bool _isProcessing;
-
-    private PeriodicTimer? _processTimer;
 
     private AnalyzedImage? _analyzedImage;
 
@@ -44,6 +47,12 @@
     {
         FaceHubService.OnResponseReceived += async analyzedImage =>
         {
+            if (!_detectionActive)
+            {
+                await _cameraFeed.ClearFaceHighlightAsync();
+                return;
+            }
+
             _analyzedImage = analyzedImage;
 
             if (_analyzedImage != null)
@@ -53,37 +62,39 @@
             }
             else
             {
-                await _cameraFeed.ClearFaceHighlight();
+                await _cameraFeed.ClearFaceHighlightAsync();
             }
 
-            await InvokeAsync(StateHasChanged);
+            StateHasChanged();
+
+            await Process();
         };
 
 
-        await FaceHubService.StartConnection();
+        await FaceHubService.StartConnectionAsync();
     }
 
-    private async Task StartStopProcessing()
+    private async Task StartStopProcessingAsync()
     {
-        if (!_isProcessing)
+        if (!_detectionActive)
         {
-            _isProcessing = true;
-            _processTimer = new PeriodicTimer(TimeSpan.FromSeconds(0.5));
+            _detectionActive = true;
 
-            while (await _processTimer.WaitForNextTickAsync())
-            {
-                var bytes = await _cameraFeed.ProcessFrame();
-                await FaceHubService.RecogniseFaces(bytes);
-            }
+            await Process();
         }
         else
         {
-            _isProcessing = false;
-            _processTimer?.Dispose();
+            _detectionActive = false;
             _analyzedImage = null;
-            await _cameraFeed.ClearFaceHighlight();
-            await InvokeAsync(StateHasChanged);
+
+            StateHasChanged();
         }
+    }
+
+    private async Task Process()
+    {
+        var bytes = await _cameraFeed.ProcessFrame();
+        await FaceHubService.RecogniseFacesAsync(bytes);
     }
 
     private async Task OpenTrainDialogAsync()

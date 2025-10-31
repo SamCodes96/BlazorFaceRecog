@@ -3,14 +3,20 @@ using FaceONNX;
 
 namespace BlazorFaceRecog.Server.Logic;
 
+public interface IFaceLogic
+{
+    FaceDetectionResult[] DetectFaces(Bitmap image);
+    float[] GetEmbeddingForFace(Bitmap image, Rectangle faceArea);
+}
+
 public class FaceLogic(
     IFace68LandmarksExtractor extractor,
     IFaceDetector detector,
-    IFaceClassifier classifier)
+    IFaceClassifier classifier) : IFaceLogic
 {
-    public FaceDetectionResult[] Detect(Bitmap image) => detector.Forward(image);
+    public FaceDetectionResult[] DetectFaces(Bitmap image) => detector.Forward(image);
 
-    public float[] GetEmbedding(Bitmap image, Rectangle faceArea)
+    public float[] GetEmbeddingForFace(Bitmap image, Rectangle faceArea)
     {
         if (faceArea.IsEmpty)
             return new float[512];

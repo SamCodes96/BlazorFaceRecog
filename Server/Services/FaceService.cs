@@ -1,5 +1,4 @@
 ﻿using System.Drawing;
-using BlazorFaceRecog.Server.Helpers;
 using BlazorFaceRecog.Server.Logic;
 using BlazorFaceRecog.Server.Models;
 using BlazorFaceRecog.Server.Repositories;
@@ -7,45 +6,76 @@ using BlazorFaceRecog.Shared;
 
 namespace BlazorFaceRecog.Server.Services;
 
-public class FaceService(IFaceRepository faceRepository, FaceLogic faceLogic)
+public interface IFaceService
 {
-    public bool FaceIsTrained => faceRepository.GetCount() > 0;
+    bool FaceIsTrained { get; }
+    void DeleteFace(Guid Id);
+    IEnumerable<Rectangle> DetectFacesInImage(byte[] imageData);
+    IEnumerable<SavedFaceModel> GetSavedFaces();
+    DetectedFace RecogniseFacesInImage(byte[] imageData, Rectangle? faceArea = null);
+    void TrainFacesFromImage(TrainFaceModel data, byte[] imageData, Rectangle? faceArea = null);
+    void UpdateFaceName(Guid id, string name);
+}
 
-    public IEnumerable<SavedFaceModel> GetSaved()
+public class FaceService(
+    IFaceRepository faceRepository,
+    IFaceLogic faceLogic,
+    IImageLogic imageLogic) : IFaceService
+{
+    public bool FaceIsTrained
     {
-        var faces = faceRepository.GetAll();
+        get
+        {
+            if (!field)
+            {
+                field = faceRepository.GetFacesCount() > 0;
+            }
 
-        return faces.Select(f => new SavedFaceModel(f.Id, f.Name, ImageHelpers.GetThumbnail(f.Image)));
+            return field;
+        }
     }
 
-    public IEnumerable<Rectangle> DetectInImage(byte[] imageData)
+    public void DeleteFace(Guid Id)
     {
-        using var bmImage = ImageHelpers.GetBitmapImage(imageData);
+        faceRepository.DeleteFace(Id);
+    }
 
-        var result = faceLogic.Detect(bmImage);
+    public IEnumerable<Rectangle> DetectFacesInImage(byte[] imageData)
+    {
+        using var bmImage = imageLogic.GetBitmapImage(imageData);
+
+        var result = faceLogic.DetectFaces(bmImage);
 
         return result.Select(f => f.Box);
     }
 
-    public DetectedFace RecogniseInImage(byte[] imageData, Rectangle? faceArea = null)
+    public IEnumerable<SavedFaceModel> GetSavedFaces()
     {
-        using var bmImage = ImageHelpers.GetBitmapImage(imageData);
-        faceArea ??= new Rectangle(0, 0, bmImage.Width, bmImage.Height);
+        var faces = faceRepository.GetAllFaces();
 
-        var embedding = faceLogic.GetEmbedding(bmImage, faceArea.Value);
-        return faceRepository.GetNearest(embedding);
+        return faces.Select(f => new SavedFaceModel(f.Id, f.Name, imageLogic.GetThumbnail(f.Image)));
     }
 
-    public void TrainFromImage(TrainFaceModel data, byte[] imageData, Rectangle? faceArea = null)
+    public DetectedFace RecogniseFacesInImage(byte[] imageData, Rectangle? faceArea = null)
     {
-        using var bmImage = ImageHelpers.GetBitmapImage(imageData);
+        using var bmImage = imageLogic.GetBitmapImage(imageData);
         faceArea ??= new Rectangle(0, 0, bmImage.Width, bmImage.Height);
 
-        var embedding = faceLogic.GetEmbedding(bmImage, faceArea.Value);
-        faceRepository.Add(data.Id, data.Name, imageData, embedding);
+        var embedding = faceLogic.GetEmbeddingForFace(bmImage, faceArea.Value);
+        return faceRepository.GetNearestFace(embedding);
     }
 
-    public void UpdateName(Guid id, string name) => faceRepository.Update(id, name);
+    public void TrainFacesFromImage(TrainFaceModel data, byte[] imageData, Rectangle? faceArea = null)
+    {
+        using var bmImage = imageLogic.GetBitmapImage(imageData);
+        faceArea ??= new Rectangle(0, 0, bmImage.Width, bmImage.Height);
 
-    public void DeleteFace(Guid Id) => faceRepository.Delete(Id);
+        var embedding = faceLogic.GetEmbeddingForFace(bmImage, faceArea.Value);
+        faceRepository.AddFace(data.Id, data.Name, imageData, embedding);
+    }
+
+    public void UpdateFaceName(Guid id, string name)
+    {
+        faceRepository.UpdateFace(id, name);
+    }
 }

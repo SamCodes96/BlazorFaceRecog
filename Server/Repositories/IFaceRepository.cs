@@ -4,15 +4,15 @@ namespace BlazorFaceRecog.Server.Repositories;
 
 public interface IFaceRepository
 {
-    public void Add(Guid id, string name, byte[] image, float[] embedding);
+    public void AddFace(Guid id, string name, byte[] image, float[] embedding);
 
-    public void Update(Guid id, string name);
+    public void UpdateFace(Guid id, string name);
 
-    public void Delete(Guid id);
+    public void DeleteFace(Guid id);
 
-    public DetectedFace GetNearest(float[] embedding);
+    public DetectedFace GetNearestFace(float[] embedding);
 
-    public long GetCount();
+    public long GetFacesCount();
 
-    public IEnumerable<EmbeddedFace> GetAll();
+    public IEnumerable<EmbeddedFace> GetAllFaces();
 }

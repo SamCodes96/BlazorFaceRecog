@@ -1,19 +1,18 @@
 ﻿using System.Drawing;
 using System.Drawing.Imaging;
 
-namespace BlazorFaceRecog.Server.Helpers;
+namespace BlazorFaceRecog.Server.Logic;
 
-public static class ImageHelpers
+public interface IImageLogic
 {
-    public static string GetThumbnail(byte[] image) => Convert.ToBase64String(image);
+    byte[] CropFaceInImage(byte[] imageData, Rectangle faceArea);
+    Bitmap GetBitmapImage(byte[] imageData);
+    string GetThumbnail(byte[] image);
+}
 
-    public static Bitmap GetBitmapImage(byte[] imageData)
-    {
-        using var ms = new MemoryStream(imageData);
-        return new Bitmap(ms);
-    }
-
-    public static byte[] CropFaceInImage(byte[] imageData, Rectangle faceArea)
+public class ImageLogic : IImageLogic
+{
+    public byte[] CropFaceInImage(byte[] imageData, Rectangle faceArea)
     {
         using var bmImage = GetBitmapImage(imageData);
 
@@ -30,4 +29,12 @@ public static class ImageHelpers
 
         return ms.ToArray();
     }
+
+    public Bitmap GetBitmapImage(byte[] imageData)
+    {
+        using var ms = new MemoryStream(imageData);
+        return new Bitmap(ms);
+    }
+
+    public string GetThumbnail(byte[] image) => Convert.ToBase64String(image);
 }

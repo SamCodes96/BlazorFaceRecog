@@ -1,28 +1,29 @@
-﻿using BlazorFaceRecog.Server.Helpers;
+﻿using BlazorFaceRecog.Server.Logic;
 using BlazorFaceRecog.Server.Services;
 using BlazorFaceRecog.Shared;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BlazorFaceRecog.Server.Controllers;
+namespace BlazorFaceRecog.Server.Endpoints;
 
 [ApiController]
 [Route("Faces")]
-public class FaceController(FaceService faceService, FaceCache cacheService) : ControllerBase
+public class FaceController(
+    FaceCache faceCache,
+    IFaceService faceService,
+    IImageLogic imageLogic) : ControllerBase
 {
     [HttpGet]
-    [Route(nameof(Saved))]
     public IActionResult Saved()
     {
-        var saved = faceService.GetSaved();
+        var saved = faceService.GetSavedFaces();
 
         return Ok(saved);
     }
 
-    [HttpPost]
-    [Route(nameof(Train))]
+    [HttpPost, Route(nameof(Train))]
     public IActionResult Train([FromBody] IEnumerable<TrainFaceModel> faceModels)
     {
-        var existingIds = faceService.GetSaved().Select(f => f.Id).ToList();
+        var existingIds = faceService.GetSavedFaces().Select(f => f.Id).ToList();
 
         var updatedFaceIds = new List<Guid>();
 
@@ -30,13 +31,13 @@ public class FaceController(FaceService faceService, FaceCache cacheService) : C
         {
             if (!existingIds.Contains(face.Id))
             {
-                if (cacheService.GetFace(face.Id) is byte[] cachedFace)
-                    faceService.TrainFromImage(face, cachedFace);
+                if (faceCache.GetFace(face.Id) is byte[] cachedFace)
+                    faceService.TrainFacesFromImage(face, cachedFace);
             }
             else
             {
                 updatedFaceIds.Add(face.Id);
-                faceService.UpdateName(face.Id, face.Name);
+                faceService.UpdateFaceName(face.Id, face.Name);
             }
         }
 
@@ -46,11 +47,10 @@ public class FaceController(FaceService faceService, FaceCache cacheService) : C
         return Ok();
     }
 
-    [HttpPost]
-    [Route(nameof(Detect))]
+    [HttpPost, Route(nameof(Detect))]
     public IActionResult Detect([FromBody] DetectFaceModel detectFaceModel)
     {
-        var faces = faceService.DetectInImage(detectFaceModel.ImageData);
+        var faces = faceService.DetectFacesInImage(detectFaceModel.ImageData);
 
         switch (faces.Count())
         {
@@ -58,11 +58,11 @@ public class FaceController(FaceService faceService, FaceCache cacheService) : C
             case < 1: return BadRequest("No faces detected");
         }
 
-        var croppedFace = ImageHelpers.CropFaceInImage(detectFaceModel.ImageData, faces.First());
+        var croppedFace = imageLogic.CropFaceInImage(detectFaceModel.ImageData, faces.First());
 
-        cacheService.SetFace(detectFaceModel.Id, croppedFace);
+        faceCache.SetFace(detectFaceModel.Id, croppedFace);
 
-        var thumbnail = ImageHelpers.GetThumbnail(croppedFace);
+        var thumbnail = imageLogic.GetThumbnail(croppedFace);
 
         return Content(thumbnail);
     }

@@ -7,13 +7,14 @@
 <MudPaper class="pa-2" 
           Elevation="0" 
           Style=@($"border: 1px solid var({borderColour})")>
-    <MudForm Model=Model @ref=@_form 
+    <MudForm @ref=@_form
+             Model=Model  
              Validation="_validator.ValidateValue">
         <MudStack Spacing="0">
             <MudIconButton Icon=@(isDeleted ? Icons.Material.Filled.Refresh : Icons.Material.Filled.Close)
                            Size=@Size.Small
                            Class="align-self-end mb-4"
-                           OnClick=@Remove />
+                           OnClick=@RemoveAsync />
             <MudStack Spacing="0" 
                       Style="height:86px; align-items:center">
                 <MudElement HtmlTag="div" 
@@ -33,11 +34,10 @@
                                                  Class="my-auto" />
                         </MudStack>
                     }
-                    <MudFileUpload T=IBrowserFile
-                                   For=@(() => Model.SelectedFile)
+                    <MudFileUpload @ref=_file
                                    @bind-Files=Model.SelectedFile
-                                   @ref=_file
-                                   OnFilesChanged=@GetFaceFromImage
+                                   For=@(() => Model.SelectedFile)
+                                   OnFilesChanged=@GetFaceFromImageAsync
                                    ErrorText=@fileErrorText
                                    Error=@(fileErrorText != null)
                                    Style="align-items:center"
@@ -52,16 +52,16 @@
                         </ActivatorContent>
                     </MudFileUpload>
                 </MudElement>
-                @if (!_file.HasErrors && Model.Thumbnail == null)
+                @if (!(_file?.HasErrors ?? false) && Model.Thumbnail == null)
                 {
                     <MudText Typo=@Typo.body2
                              Align=@Align.Center>Select an image</MudText>
                 }
             </MudStack>
-            <MudTextField Label="Name"
-                          For=@(() => Model.Name)
+            <MudTextField @ref=_name
                           @bind-Value=Model.Name
-                          @ref=_name
+                          For=@(() => Model.Name)
+                          Label="Name"
                           Disabled=isDeleted
                           OnBlur=StateHasChanged />
         </MudStack>
@@ -76,13 +76,13 @@
     [Parameter]
     public FaceCardViewModel Model { get; init; } = new();
 
-    private FaceModelFluentValidator _validator = new();
+    private MudForm _form = default!;
 
-    private MudForm _form = new();
+    private MudTextField<string?> _name = default!;
 
-    private MudTextField<string?> _name = new();
+    private MudFileUpload<IBrowserFile> _file = default!;
 
-    private MudFileUpload<IBrowserFile> _file = new();
+    private FaceCardViewModelValidator _validator = new();
 
     private string? _fileFailureErrorOverride;
 
@@ -90,15 +90,15 @@
         ? "Opacity: 0.5;"
         : string.Empty;
 
-    private string borderColour => (_name.HasErrors || _file.HasErrors) && !isDeleted
+    private string borderColour => (_name is { HasErrors: true } || _file is { HasErrors: true} ) && !isDeleted
         ? "--mud-palette-error"
         : "--mud-palette-lines-default";
 
     private bool isDeleted => Model.State == CardState.Deleted;
 
-    private string? fileErrorText => _fileFailureErrorOverride ?? _file.GetErrorText();
+    private string? fileErrorText => _fileFailureErrorOverride ?? _file?.GetErrorText();
 
-    public async Task<bool> Validate()
+    public async Task<bool> ValidateAsync()
     {
         await _form.Validate();
         StateHasChanged();
@@ -106,18 +106,18 @@
         return _form.IsValid;
     }
 
-    private void Remove()
+    private async Task RemoveAsync()
     {
-        OnRemove.InvokeAsync();
+        await OnRemove.InvokeAsync();
     }
 
-    private async Task GetFaceFromImage(InputFileChangeEventArgs e)
+    private async Task GetFaceFromImageAsync(InputFileChangeEventArgs e)
     {
         _fileFailureErrorOverride = null;
 
         StateHasChanged();
 
-        var image = await GetFileContent(e.File);
+        var image = await GetFileContentAsync(e.File);
         var payload = new DetectFaceModel(Model.Id, image);
 
         var response = await Http.PostAsJsonAsync("Faces/Detect", payload);
@@ -136,7 +136,7 @@
         StateHasChanged();
     }
 
-    private static async Task<byte[]> GetFileContent(IBrowserFile file)
+    private static async Task<byte[]> GetFileContentAsync(IBrowserFile file)
     {
         using var ms = new MemoryStream();
         using var fileStream = file.OpenReadStream(2000 * 1024 * 1024);

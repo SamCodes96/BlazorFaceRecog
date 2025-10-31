@@ -1,5 +1,5 @@
 ﻿using BlazorFaceRecog.Server.Models;
-using UMapx.Core;
+using UMapx.Distance;
 
 namespace BlazorFaceRecog.Server.Repositories;
 
@@ -7,32 +7,33 @@ public class InMemoryFaceRepository : IFaceRepository
 {
     private readonly List<EmbeddedFace> _faces = [];
 
-    public void Add(Guid id, string name, byte[] image, float[] embedding)
+    private readonly Cosine _cosine = new();
+
+    public void AddFace(Guid id, string name, byte[] image, float[] embedding)
     {
         _faces.Add(new EmbeddedFace(id, name, image, embedding));
     }
 
-    public void Update(Guid id, string name)
+    public void UpdateFace(Guid id, string name)
     {
         var face = _faces.SingleOrDefault(f => f.Id == id);
 
-        if (face != null)
-            face.Name = name;
+        face?.Name = name;
     }
 
-    public void Delete(Guid id)
+    public void DeleteFace(Guid id)
     {
         _faces.RemoveAll(f => f.Id == id);
     }
 
-    public DetectedFace GetNearest(float[] embedding)
+    public DetectedFace GetNearestFace(float[] embedding)
     {
         var Max = float.MinValue;
         string nearest = string.Empty;
 
         foreach (var face in _faces)
         {
-            var d = face.Embedding.Cosine(embedding);
+            var d = _cosine.Compute(face.Embedding, embedding);
 
             if (d > Max)
             {
@@ -45,7 +46,7 @@ public class InMemoryFaceRepository : IFaceRepository
         return new DetectedFace { Name = nearest, Score = score };
     }
 
-    public long GetCount() => _faces.Count;
+    public long GetFacesCount() => _faces.Count;
 
-    public IEnumerable<EmbeddedFace> GetAll() => _faces;
+    public IEnumerable<EmbeddedFace> GetAllFaces() => _faces;
 }

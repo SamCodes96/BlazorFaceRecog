@@ -1,4 +1,4 @@
-﻿async function startVideo(src) {
+﻿async function startVideo(src, dotnetRef) {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: {
@@ -6,6 +6,8 @@
                 width: { min: 480, ideal: 1920, max: 1920 },
             }
         });
+
+        await dotnetRef.invokeMethodAsync('DisplayWebcam');
 
         const video = document.getElementById(src);
 

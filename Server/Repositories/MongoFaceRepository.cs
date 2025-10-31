@@ -1,41 +1,47 @@
 ﻿using BlazorFaceRecog.Server.Configuration;
 using BlazorFaceRecog.Server.Models;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
 namespace BlazorFaceRecog.Server.Repositories;
 
-public class MongoFaceRepository(IMongoDatabase database, MongoDBSettings mongoSettings)
-    : MongoRepositoryBase<EmbeddedFace>(database, mongoSettings.CollectionName!), IFaceRepository
+public class MongoFaceRepository(
+    IMongoDatabase database,
+    IOptions<MongoDBSettings> mongoSettings)
+    : IFaceRepository
 {
-    public void Add(Guid id, string name, byte[] image, float[] embedding)
+    private readonly IMongoCollection<EmbeddedFace> _collection
+        = database.GetCollection<EmbeddedFace>(mongoSettings.Value.CollectionName);
+
+    public void AddFace(Guid id, string name, byte[] image, float[] embedding)
     {
-        Collection.InsertOne(new EmbeddedFace(id, name, image, embedding));
+        _collection.InsertOne(new EmbeddedFace(id, name, image, embedding));
     }
 
-    public void Update(Guid id, string name)
+    public void UpdateFace(Guid id, string name)
     {
         var filter = Builders<EmbeddedFace>.Filter.Eq(f => f.Id, id);
         var update = Builders<EmbeddedFace>.Update.Set(f => f.Name, name);
 
-        Collection.UpdateOne(filter, update);
+        _collection.UpdateOne(filter, update);
     }
 
-    public void Delete(Guid id)
+    public void DeleteFace(Guid id)
     {
         var filter = Builders<EmbeddedFace>.Filter.Eq(f => f.Id, id);
 
-        Collection.DeleteOne(filter);
+        _collection.DeleteOne(filter);
     }
 
-    public DetectedFace GetNearest(float[] embedding)
+    public DetectedFace GetNearestFace(float[] embedding)
     {
         var searchOptions = new VectorSearchOptions<EmbeddedFace>()
         {
-            IndexName = mongoSettings.SearchIndexName,
-            NumberOfCandidates = (int)GetCount()
+            IndexName = mongoSettings.Value.SearchIndexName,
+            NumberOfCandidates = (int)GetFacesCount()
         };
 
-        return Collection.Aggregate()
+        return _collection.Aggregate()
             .VectorSearch(f => f.Embedding, embedding, 1, searchOptions)
             .Project(Builders<EmbeddedFace>.Projection
                 .Include(f => f.Name)
@@ -44,7 +50,9 @@ public class MongoFaceRepository(IMongoDatabase database, MongoDBSettings mongoS
             .FirstOrDefault();
     }
 
-    public long GetCount() => Collection.CountDocuments(NoFilter);
+    public long GetFacesCount() => _collection.CountDocuments(NoFilter);
 
-    public IEnumerable<EmbeddedFace> GetAll() => Collection.Find(NoFilter).ToEnumerable();
+    public IEnumerable<EmbeddedFace> GetAllFaces() => _collection.Find(NoFilter).ToEnumerable();
+
+    private static FilterDefinition<EmbeddedFace> NoFilter => Builders<EmbeddedFace>.Filter.Empty;
 }

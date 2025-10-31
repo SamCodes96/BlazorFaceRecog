@@ -19,9 +19,9 @@ public class FaceHubService
         _hubConnection.On<AnalyzedImage?>("ImageAnalyzed", HandleResponse);
     }
 
-    public async Task StartConnection() => await _hubConnection.StartAsync();
+    public async Task StartConnectionAsync() => await _hubConnection.StartAsync();
 
-    public async Task RecogniseFaces(byte[] imageData) => await _hubConnection.SendAsync("RecogniseInImage", imageData);
+    public async Task RecogniseFacesAsync(byte[] imageData) => await _hubConnection.SendAsync("RecogniseInImage", imageData);
 
     private void HandleResponse(AnalyzedImage? response) => OnResponseReceived?.Invoke(response);
 }

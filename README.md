@@ -9,11 +9,20 @@ The project setup is a typical ASP .NET hosted Blazor WASM solution, with 3 sepe
 ### Running the App
 The Blazor client app is hosted on the server, so they both run on the same port. Running the server project in Visual Studio with the `RunApp` profile will run both together. The client can be run on it's own using the `RunClientOnly` profile.
 
+### Using the App
+Use the `Start` button to begin detection. This will highlight faces in the frame.
+If there are any saved faces that match then the name will be displayed. 
+The recognition logic only supports one face at a time.
+
+Use the `Train` button to manage saved faces. Currently only JPEG images are supported for training.
+
 ### Configuration
 The server is configured with an appsettings.json file. There are a few different settings available to configure the app:
 
 #### UseGPU (*boolean*)
 The facial recognition process uses the ONNX runtime. This workload can be run on the CPU or on an NVIDIA CUDA enabled GPU. By default the app uses the CPU, but it is far less performant.
+
+It's worth noting that getting this working can be tricky.
 
 More details can be found [here](https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html#requirements). The version of the ONNX runtime the app uses is 1.9.0. The latest version compatible version of CUDA is 11.8.
 
@@ -51,9 +60,3 @@ The search index on the collection must be of type `vectorSearch` and should hav
   ]
 }
 ```
-
-### TODO
-- [x] MongoDB support
-- [x] Upgrade to .NET 9.0
-- [x] Upgrade MudBlazor to 8.X
-- [ ] Unit tests

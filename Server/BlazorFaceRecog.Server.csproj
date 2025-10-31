@@ -5,14 +5,15 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>preview</LangVersion>
+    <UserSecretsId>c695ef3c-3d44-4afe-968c-39a7da6c13a6</UserSecretsId>
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="FaceONNX" Version="4.0.4.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.3" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.20.1" />
-    <PackageReference Include="MongoDB.Bson" Version="3.2.1" />
-    <PackageReference Include="MongoDB.Driver" Version="3.2.1" />
+    <PackageReference Include="FaceONNX" Version="4.1.1.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.10" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.9.0" />
+    <PackageReference Include="MongoDB.Bson" Version="3.5.0" />
+    <PackageReference Include="MongoDB.Driver" Version="3.5.0" />
   </ItemGroup>
 
   <ItemGroup>    

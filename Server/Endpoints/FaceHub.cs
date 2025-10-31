@@ -4,29 +4,31 @@ using BlazorFaceRecog.Server.Services;
 using BlazorFaceRecog.Shared;
 using Microsoft.AspNetCore.SignalR;
 
-namespace BlazorFaceRecog.Server.Hubs;
+namespace BlazorFaceRecog.Server.Endpoints;
 
-public class FaceHub(FaceService faceRecognitionService, IConfiguration configuration) : Hub
+public class FaceHub(
+    IFaceService faceService,
+    IConfiguration configuration) : Hub
 {
     private readonly int _threshold = configuration.GetValue<int>("Threshold");
 
     public async Task RecogniseInImage(byte[] data)
     {
-        var faces = faceRecognitionService.DetectInImage(data);
+        var faces = faceService.DetectFacesInImage(data);
 
-        if (faces?.FirstOrDefault() is not Rectangle detectedFace)
+        if (faces?.FirstOrDefault() is not Rectangle detectedFace || detectedFace == default)
         {
             await Clients.Caller.SendAsync("ImageAnalyzed", null);
             return;
         }
 
-        if (!faceRecognitionService.FaceIsTrained)
+        if (!faceService.FaceIsTrained)
         {
             await DetectedUnknownFace(detectedFace);
             return;
         }
 
-        var recognisedFace = faceRecognitionService.RecogniseInImage(data, detectedFace);
+        var recognisedFace = faceService.RecogniseFacesInImage(data, detectedFace);
 
         if (recognisedFace?.Score is not float score || score < _threshold)
         {
