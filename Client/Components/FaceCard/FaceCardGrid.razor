@@ -42,7 +42,7 @@
 
     private readonly Dictionary<FaceCardViewModel, FaceCard> _items = [];
 
-    private readonly List<Guid> _initialItemIds = [];
+    private readonly HashSet<string> _initialItemValues = new(StringComparer.Ordinal);
 
     public void AddNew()
     {
@@ -63,7 +63,9 @@
             {
                 var viewModel = FaceCardViewModel.FromSaveModel(item);
                 _items.Add(viewModel, new());
-                _initialItemIds.Add(viewModel.Id);
+
+                var comparison = GetComparisonValue(viewModel);
+                _initialItemValues.Add(comparison);
             }
 
             _loadState = GridLoadState.Loaded;
@@ -78,14 +80,14 @@
 
     public async Task<bool> ValidateCardsAsync()
     {
+        var valid = true;
+
         foreach (var item in _items)
         {
-            var result = await item.Value.ValidateAsync();
-            if (!result)
-                return false;
+            valid &= await item.Value.ValidateAsync();
         }
 
-        return true;
+        return valid;
     }
 
     public IEnumerable<TrainFaceModel> GetModels()
@@ -100,9 +102,15 @@
 
     public bool HasChanges()
     {
-        var current = _items.Select(x => x.Value.Model.Id);
+        var current = _items.Select(x => GetComparisonValue(x.Key)).ToList();
 
-        return !Enumerable.SequenceEqual(current, _initialItemIds);
+        if (current.Count != _initialItemValues.Count)
+            return true;
+
+        if (_initialItemValues.Except(current).Any())
+            return true;
+
+        return false;
     }
 
     private async Task RemoveAsync(FaceCardViewModel model)
@@ -123,5 +131,10 @@
         }
 
         StateHasChanged();
+    }
+
+    private static string GetComparisonValue(FaceCardViewModel model)
+    {
+        return $"{model.Id}|{model.Name}|{model.State}";
     }
 }
