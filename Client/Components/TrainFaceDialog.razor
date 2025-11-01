@@ -43,7 +43,7 @@
             return;
         }
 
-        var faceModels = _cardGrid.GetModels().ToArray();
+        var faceModels = _cardGrid.GetTrainModels().ToArray();
 
         var response = await Http.PostAsJsonAsync("Faces/Train", faceModels);
         if (!response.IsSuccessStatusCode)

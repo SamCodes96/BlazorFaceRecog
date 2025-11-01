@@ -6,17 +6,13 @@
 <MudGrid Spacing="2" Justify="Justify.Center">
     @if (_loadState == GridLoadState.Loaded)
     {
-        if (_items.Count > 0)
+        if (_models.Count > 0)
         {
-            foreach (var item in _items)
+            foreach (var model in _models)
             {
-                var model = item.Key;
-
                 <MudItem @key=model.Id>
-                    <FaceCard 
-                        @ref=_items[model] 
-                        Model=model 
-                        OnRemove=@(async() => await RemoveAsync(model)) />
+                    <FaceCard Model=model
+                              OnRemove=@(async() => await RemoveAsync(model)) />
                 </MudItem>
             }
         }
@@ -40,13 +36,13 @@
 @code {
     private GridLoadState _loadState;
 
-    private readonly Dictionary<FaceCardViewModel, FaceCard> _items = [];
+    private readonly List<FaceCardViewModel> _models = [];
 
     private readonly HashSet<string> _initialItemValues = new(StringComparer.Ordinal);
 
     public void AddNew()
     {
-        _items.Add(new(), new());
+        _models.Add(new());
         StateHasChanged();
     }
 
@@ -62,9 +58,9 @@
             foreach (var item in savedFaces)
             {
                 var viewModel = FaceCardViewModel.FromSaveModel(item);
-                _items.Add(viewModel, new());
+                _models.Add(viewModel);
 
-                var comparison = GetComparisonValue(viewModel);
+                var comparison = viewModel.ToComparisonString();
                 _initialItemValues.Add(comparison);
             }
 
@@ -82,27 +78,26 @@
     {
         var valid = true;
 
-        foreach (var item in _items)
+        foreach (var item in _models)
         {
-            valid &= await item.Value.ValidateAsync();
+            valid &= await item.ValidateAsync();
         }
 
         return valid;
     }
 
-    public IEnumerable<TrainFaceModel> GetModels()
+    public IEnumerable<TrainFaceModel> GetTrainModels()
     {
-        foreach (var item in _items)
+        foreach (var item in _models)
         {
-            var model = item.Value.Model;
-            if (model.State != CardState.Deleted)
-                yield return item.Value.Model.ToTrainModel();
+            if (item.State != CardState.Deleted)
+                yield return item.ToTrainModel();
         }
     }
 
     public bool HasChanges()
     {
-        var current = _items.Select(x => GetComparisonValue(x.Key)).ToList();
+        var current = _models.Select(x => x.ToComparisonString()).ToList();
 
         if (current.Count != _initialItemValues.Count)
             return true;
@@ -118,23 +113,18 @@
         switch (model.State)
         {
             case CardState.Unsaved:
-                _items.Remove(model);
+                _models.Remove(model);
                 break;
             case CardState.Saved:
                 model.State = CardState.Deleted;
-                await _items[model].ValidateAsync();
+                await model.ValidateAsync();
                 break;
             case CardState.Deleted:
                 model.State = CardState.Saved;
-                await _items[model].ValidateAsync();
+                await model.ValidateAsync();
                 break;
         }
 
         StateHasChanged();
-    }
-
-    private static string GetComparisonValue(FaceCardViewModel model)
-    {
-        return $"{model.Id}|{model.Name}|{model.State}";
     }
 }

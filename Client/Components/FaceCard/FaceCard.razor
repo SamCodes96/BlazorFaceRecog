@@ -98,12 +98,15 @@
 
     private string? fileErrorText => _fileFailureErrorOverride ?? _file?.GetErrorText();
 
-    public async Task<bool> ValidateAsync()
+    protected override void OnInitialized()
     {
-        await _form.Validate();
-        StateHasChanged();
+        Model.OnValidate += async () =>
+        {
+            await _form.Validate();
+            StateHasChanged();
 
-        return _form.IsValid;
+            return _form.IsValid;
+        };
     }
 
     private async Task RemoveAsync()
