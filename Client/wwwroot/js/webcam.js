@@ -1,4 +1,4 @@
-﻿async function startVideo(src, dotnetRef) {
+﻿export const startVideo = async (dotnetRef) => {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: {
@@ -9,7 +9,7 @@
 
         await dotnetRef.invokeMethodAsync('DisplayWebcam');
 
-        const video = document.getElementById(src);
+        const video = document.getElementById('videoFeed');
 
         if ("srcObject" in video) {
             video.srcObject = stream;
@@ -23,18 +23,22 @@
     }
 }
 
-function getFrame(src, dest) {
-    const video = document.getElementById(src);
-    const canvas = document.getElementById(dest);
-    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+export const getFrame = async () => {
+    const video = document.getElementById('videoFeed');
+    const w = video.clientWidth;
+    const h = video.clientHeight;
 
-    return {
-        dataUrl: canvas.toDataURL("image/jpeg")
-    }
-}
+    const canvas = new OffscreenCanvas(w, h);
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, w, h);
 
-function drawOnFrame(src, x, y, width, height) {
-    const ctx = clearFrame(src);
+    return await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.2 });
+};
+
+export const drawOnFrame = (x, y, width, height) => {
+    const canvas = getSizedCanvas();
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.beginPath();
     ctx.lineWidth = "3";
@@ -43,10 +47,15 @@ function drawOnFrame(src, x, y, width, height) {
     ctx.stroke();
 }
 
-function clearFrame(src) {
-    const canvas = document.getElementById(src);
+export const clearFrame = () => {
+    const canvas = getSizedCanvas();
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
 
-    return ctx;
+const getSizedCanvas = () => {
+    const canvas = document.getElementById('faceHighlight');
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    return canvas;
 }

@@ -20,9 +20,9 @@ Use the `Train` button to manage saved faces. Currently only JPEG images are sup
 The server is configured with an appsettings.json file. There are a few different settings available to configure the app:
 
 #### UseGPU (*boolean*)
-The facial recognition process uses the ONNX runtime. This workload can be run on the CPU or on an NVIDIA CUDA enabled GPU. By default the app uses the CPU, but it is far less performant.
+The facial recognition process uses the ONNX runtime. This workload can be run on the CPU or on an NVIDIA CUDA enabled GPU. By default the app uses the CPU.
 
-It's worth noting that getting this working can be tricky.
+The performance of GPU rendering can vary and can be tricky to get working nicely.
 
 More details can be found [here](https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html#requirements). The version of the ONNX runtime the app uses is 1.9.0. The latest version compatible version of CUDA is 11.8.
 

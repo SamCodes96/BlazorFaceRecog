@@ -49,20 +49,19 @@
         {
             if (!_detectionActive)
             {
-                await _cameraFeed.ClearFaceHighlightAsync();
+                _ =_cameraFeed.ClearFaceHighlightAsync();
                 return;
             }
-
             _analyzedImage = analyzedImage;
 
             if (_analyzedImage != null)
             {
                 var face = _analyzedImage.Face;
-                await _cameraFeed.DrawOnFrame(face);
+                _ =_cameraFeed.DrawOnFrameAsync(face);
             }
             else
             {
-                await _cameraFeed.ClearFaceHighlightAsync();
+                _ =_cameraFeed.ClearFaceHighlightAsync();
             }
 
             StateHasChanged();
@@ -86,8 +85,6 @@
         {
             _detectionActive = false;
             _analyzedImage = null;
-
-            StateHasChanged();
         }
     }
 

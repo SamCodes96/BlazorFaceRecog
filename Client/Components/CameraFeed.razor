@@ -1,12 +1,13 @@
 ﻿@using System.Text.RegularExpressions
 
+@implements IAsyncDisposable
+
 @inject IJSRuntime JS
 
 @if (WebcamStarted)
 {
     <div style="position: relative; width: 100%; margin-top: 20px">
         <video id="videoFeed" style="width: 100%; height: 100%"></video>
-        <canvas id="currentFrame" style="width:100%; height: 100%; position: absolute; left: 0; display:none;"></canvas>
         <canvas id="faceHighlight" style="width: 100%; height: 100%; position: absolute; left: 0; z-index: 1"></canvas>
     </div>
 }
@@ -28,9 +29,14 @@ else
 
     public bool WebcamStarted { get; private set; }
 
+    private IJSObjectReference _module = default!;
+
     protected override async Task OnInitializedAsync()
     {
-        await JS.InvokeVoidAsync("startVideo", "videoFeed", DotNetObjectReference.Create(this));
+        _module = await JS.InvokeAsync<IJSObjectReference>(
+                "import", "./js/webcam.js");
+
+        await _module.InvokeVoidAsync("startVideo", DotNetObjectReference.Create(this));
     }
 
     [Parameter]
@@ -40,30 +46,30 @@ else
     public async Task DisplayWebcam()
     {
         WebcamStarted = true;
-        StateHasChanged();
         await OnWebcamStart.InvokeAsync();
     }
 
     public async Task<byte[]> ProcessFrame()
     {
-        var imageString = await JS.InvokeAsync<JSImage>("getFrame", "videoFeed", "currentFrame");
-
-        return GetBytesFromDataUrl(imageString.DataUrl);
+        var result = await _module.InvokeAsync<IJSStreamReference>("getFrame");
+        var stream = await result.OpenReadStreamAsync();
+        using var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        return ms.ToArray();
     }
 
-    public async Task DrawOnFrame(System.Drawing.Rectangle face)
+    public async Task DrawOnFrameAsync(System.Drawing.Rectangle face)
     {
-        await JS.InvokeVoidAsync("drawOnFrame", "faceHighlight", face.X, face.Y, face.Width, face.Height);
+        await _module.InvokeVoidAsync("drawOnFrame", face.X, face.Y, face.Width, face.Height);
     }
 
     public async Task ClearFaceHighlightAsync()
     {
-        await JS.InvokeVoidAsync("clearFrame", "faceHighlight");
+        await _module.InvokeVoidAsync("clearFrame");
     }
 
-    private static byte[] GetBytesFromDataUrl(string dataUrl)
+    public async ValueTask DisposeAsync()
     {
-        var base64Data = Regex.Match(dataUrl, "data:image/(?<type>.+?),(?<data>.+)").Groups["data"].Value;
-        return Convert.FromBase64String(base64Data);
+        await _module.DisposeAsync();
     }
 }
