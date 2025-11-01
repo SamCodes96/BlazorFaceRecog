@@ -31,7 +31,8 @@ builder.Services.AddFaceONNX();
 
 builder.Services
     .AddOptions<AppSettings>()
-    .Bind(builder.Configuration);
+    .Bind(builder.Configuration)
+    .ValidateDataAnnotations();
 
 var mongoSettings = builder.Configuration.GetSection("MongoDB");
 if (mongoSettings.Exists())
