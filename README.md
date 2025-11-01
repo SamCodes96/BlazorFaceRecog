@@ -1,7 +1,7 @@
 ﻿### About
-Initially started this to learn Blazor WASM, with the intention of using some kind of dotnet library for the actual facial recognition.
-Sadly that usually involves some kind of DLL/runtime that would require a server, or I would need to go down a low level rabbit hole.
-In retrospect this would probably be better off as a Blazor server app since it uses SignalR anyway... ¯\_(ツ)_/¯
+Initially started this to mess with Blazor WASM. The intention was to use some kind of .NET library for the actual facial recognition instead of just doing it in JS.
+Sadly that usually involves some kind of DLL/runtime that can only run on a server, or I would need to go down a low level WASM rabbit hole.
+In retrospect this would probably be better off as a Blazor server app since it uses SignalR anyway... ¯\\_(ツ)_/¯
 
 ### Project Setup
 
@@ -20,6 +20,8 @@ If there are any saved faces that match then the name will be displayed.
 The recognition logic only supports one face at a time.
 
 Use the `Train` button to manage saved faces. Currently only JPEG images are supported for training.
+
+The `Scan Quality` slider adjusts the quality of the frames sent for scanning. Lower quality is better when dealing with a slow network, but the compression may affect recognition negatively if the camera quality is already low. Likewise setting it too high with a high resolution camera may be too much for SignalR to handle.
 
 ### Configuration
 The server is configured with an appsettings.json file. There are a few different settings available to configure the app:

@@ -38,6 +38,9 @@ else
     }
 
     [Parameter]
+    public double Quality { get; set; }
+
+    [Parameter]
     public EventCallback<bool> OnWebcamStart { get; set; }
 
     [JSInvokable]
@@ -49,7 +52,7 @@ else
 
     public async Task<byte[]> ProcessFrame()
     {
-        var result = await _module.InvokeAsync<IJSStreamReference>("getFrame");
+        var result = await _module.InvokeAsync<IJSStreamReference>("getFrame", Quality);
         var stream = await result.OpenReadStreamAsync();
         using var ms = new MemoryStream();
         await stream.CopyToAsync(ms);

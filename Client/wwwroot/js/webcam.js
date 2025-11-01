@@ -23,7 +23,7 @@
     }
 }
 
-export const getFrame = async () => {
+export const getFrame = async (quality) => {
     const video = document.getElementById('videoFeed');
     const w = video.clientWidth;
     const h = video.clientHeight;
@@ -32,7 +32,7 @@ export const getFrame = async () => {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, w, h);
 
-    return await canvas.convertToBlob({ type: 'image/jpeg', quality: 0.2 });
+    return await canvas.convertToBlob({ type: 'image/jpeg', quality: quality });
 };
 
 export const drawOnFrame = (x, y, width, height) => {

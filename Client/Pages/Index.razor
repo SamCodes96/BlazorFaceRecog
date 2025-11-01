@@ -1,39 +1,53 @@
-﻿@using System.Text.RegularExpressions
-@using System.Drawing
-
-@page "/"
+﻿@page "/"
 
 @inject IDialogService DialogService
-@inject FaceHubService FaceHubService
+@inject IFaceHubService FaceHubService
+@inject ISnackbar Snackbar
 
 <PageTitle>Blazor Face Recog</PageTitle>
 
-<CameraFeed @ref=_cameraFeed OnWebcamStart=@StateHasChanged />
+<CameraFeed @ref=_cameraFeed OnWebcamStart=@StateHasChanged Quality="_quality"/>
 @if(_cameraFeed?.WebcamStarted ?? false)
 {
-    <MudStack Row=true>
-        <MudButton OnClick=@(() => StartStopProcessingAsync())
-                   Color=MudBlazor.Color.Primary
-                   Variant=Variant.Filled>@(!_detectionActive ? "Start" : "Stop")</MudButton>
+    <MudStack Row=true 
+              AlignItems="AlignItems.Start" 
+              Spacing="6">
+        <MudStack Spacing="1">
+            <MudStack Row=true>
+                <MudButton OnClick=@(() => StartStopProcessingAsync())
+                           Color=MudBlazor.Color.Primary
+                           Variant=Variant.Filled>@(!_detectionActive ? "Start" : "Stop")</MudButton>
+                <MudButton OnClick=OpenTrainDialogAsync
+                           Disabled=_detectionActive
+                           Color=MudBlazor.Color.Primary
+                           Variant=Variant.Filled>Train</MudButton>
+            </MudStack>
+            @if (_detectionActive)
+            {
+                <MudText Typo=@Typo.subtitle2>
+                    <p>Face: @(_analyzedImage?.Name ?? "No Face Detected")</p>
+                    @if (_analyzedImage?.Score is > 0)
+                    {
+                        <p>Score: @_analyzedImage.Score</p>
+                    }
+                </MudText>
+            }
+        </MudStack>
+        @if(_detectionActive)
+        {
+            <MudStack Spacing="0">
+                <MudText>Scan Quality:</MudText>
+                <MudSlider @bind-Value="_quality"
+                           Min="0.1"
+                           Max="1.0"
+                           step="0.1"
+                           Color="MudBlazor.Color.Primary"
+                           Style="margin-top: 0px"></MudSlider>
+            </MudStack>
 
-        <MudButton OnClick=OpenTrainDialogAsync
-                   Disabled=_detectionActive
-                   Color=MudBlazor.Color.Primary
-                   Variant=Variant.Filled>Train</MudButton>
+        }
     </MudStack>
 }
-
-@if (_detectionActive)
-{
-    <MudText Typo=@Typo.subtitle2>
-        <p>Face: @(_analyzedImage?.Name ?? "No Face Detected")</p>
-        @if(_analyzedImage?.Score is > 0)
-        {
-            <p>Score: @_analyzedImage.Score</p>
-        }
-    </MudText>
-}
-
 @code {
     private CameraFeed _cameraFeed = default!;
 
@@ -43,15 +57,12 @@
 
     private AnalyzedImage? _analyzedImage;
 
-    protected override async Task OnInitializedAsync()
+    private double _quality = 0.5;
+
+    protected override void OnInitialized()
     {
         FaceHubService.OnResponseReceived += async analyzedImage =>
         {
-            if (!_detectionActive)
-            {
-                _ =_cameraFeed.ClearFaceHighlightAsync();
-                return;
-            }
             _analyzedImage = analyzedImage;
 
             if (_analyzedImage != null)
@@ -69,8 +80,20 @@
             await Process();
         };
 
+        FaceHubService.OnDisconnect += async (ex) =>
+        {
+            if (ex is not null)
+            {
+                _quality = 0.5;
+                Snackbar.Add("An error occured. Connection to the server was lost.", MudBlazor.Severity.Error);
 
-        await FaceHubService.StartConnectionAsync();
+                if (_detectionActive)
+                {
+                    await StartStopProcessingAsync();
+                    StateHasChanged();
+                }
+            }
+        };
     }
 
     private async Task StartStopProcessingAsync()
@@ -78,6 +101,7 @@
         if (!_detectionActive)
         {
             _detectionActive = true;
+            await FaceHubService.StartConnectionAsync();
 
             await Process();
         }
@@ -85,6 +109,9 @@
         {
             _detectionActive = false;
             _analyzedImage = null;
+
+            await FaceHubService.EndConnectionAsync();
+            _ =_cameraFeed.ClearFaceHighlightAsync();
         }
     }
 
