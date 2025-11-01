@@ -1,3 +1,8 @@
+﻿### About
+Initially started this to learn Blazor WASM, with the intention of using some kind of dotnet library for the actual facial recognition.
+Sadly that usually involves some kind of DLL/runtime that would require a server, or I would need to go down a low level rabbit hole.
+In retrospect this would probably be better off as a Blazor server app since it uses SignalR anyway... ¯\_(ツ)_/¯
+
 ### Project Setup
 
 The project setup is a typical ASP .NET hosted Blazor WASM solution, with 3 seperate projects:
