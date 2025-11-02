@@ -16,7 +16,7 @@ builder.Services.AddResponseCompression(opts => opts.MimeTypes = ResponseCompres
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication();
 
-builder.Services.AddSignalR();
+builder.Services.AddSignalR().AddHubOptions<FaceHub>(opt => opt.MaximumReceiveMessageSize = 1024 * 1024);
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
