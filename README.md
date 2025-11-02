@@ -1,6 +1,8 @@
 ﻿# About
-Initially started this to mess with Blazor WASM, with the intention of using some kind of .NET library for client side facial recognition instead of just doing it in JS.
-However doing so usually involves some kind of DLL/runtime that can only run on a server, or would require a trip down a low level WASM rabbit hole.
+![example](https://github.com/user-attachments/assets/8d2aac06-1624-41cc-be50-c48eaebbb3bb)
+ 
+Initially started this to mess around with Blazor WASM, with the intention of using some kind of .NET library for client side facial recognition instead of just doing it in JS.
+After experimenting it became clear that doing so would require some kind of DLL/runtime that can only run on a server, or would require a trip down a low level WASM rabbit hole.
 In retrospect this would probably be better off as a Blazor server app since it uses SignalR anyway... ¯\\_(ツ)_/¯
 
 ## Project Setup
