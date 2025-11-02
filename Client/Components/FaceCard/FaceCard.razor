@@ -100,7 +100,7 @@
 
     protected override void OnInitialized()
     {
-        Model.OnValidate += async () =>
+        Model.OnValidate = async () =>
         {
             await _form.Validate();
             StateHasChanged();

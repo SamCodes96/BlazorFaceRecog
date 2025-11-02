@@ -12,14 +12,11 @@ public class FaceCardViewModel
     public string? Thumbnail { get; set; }
     public CardState State { get; set; }
 
-    public event Func<Task<bool>>? OnValidate;
+    public Func<Task<bool>>? OnValidate { get; set; }
 
     public async Task<bool> ValidateAsync()
     {
-        if (OnValidate != null)
-            return await OnValidate!.Invoke();
-
-        return true;
+        return await (OnValidate?.Invoke() ?? Task.FromResult(true));
     }
 
     public TrainFaceModel ToTrainModel()
