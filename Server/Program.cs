@@ -21,7 +21,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
 builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<FaceCache>();
+builder.Services.AddSingleton<IFaceCache, FaceCache>();
 
 builder.Services.AddTransient<IFaceService, FaceService>();
 builder.Services.AddTransient<IFaceLogic, FaceLogic>();

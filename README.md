@@ -1,6 +1,6 @@
 ﻿### About
-Initially started this to mess with Blazor WASM. The intention was to use some kind of .NET library for the actual facial recognition instead of just doing it in JS.
-Sadly that usually involves some kind of DLL/runtime that can only run on a server, or I would need to go down a low level WASM rabbit hole.
+Initially started this to mess with Blazor WASM, with the intention of using some kind of .NET library for client side facial recognition instead of just doing it in JS.
+However doing so usually involves some kind of DLL/runtime that can only run on a server, or would require a trip down a low level WASM rabbit hole.
 In retrospect this would probably be better off as a Blazor server app since it uses SignalR anyway... ¯\\_(ツ)_/¯
 
 ### Project Setup
@@ -16,7 +16,7 @@ The Blazor client app is hosted on the server, so they both run on the same port
 
 ### Using the App
 Use the `Start` button to begin detection. This will highlight faces in the frame.
-If there are any saved faces that match then the name will be displayed. 
+If there are any saved faces that match then the name will be displayed as well as the similarity score.
 The recognition logic only supports one face at a time.
 
 Use the `Train` button to manage saved faces. Currently only JPEG images are supported for training.

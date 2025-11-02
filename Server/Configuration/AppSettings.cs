@@ -4,8 +4,8 @@ namespace BlazorFaceRecog.Server.Configuration;
 
 public class AppSettings
 {
-    [Range(0, 100, MinimumIsExclusive = true, MaximumIsExclusive = true)]
-    public required int Threshold { get; init; }
+    [Range(0, 100, MaximumIsExclusive = true)]
+    public int Threshold { get; init; }
 
-    public required bool UseGpu { get; init; }
+    public bool UseGpu { get; init; }
 }

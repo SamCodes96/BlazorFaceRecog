@@ -8,7 +8,7 @@ namespace BlazorFaceRecog.Server.Endpoints;
 [ApiController]
 [Route("Faces")]
 public class FaceController(
-    FaceCache faceCache,
+    IFaceCache faceCache,
     IFaceService faceService,
     IImageLogic imageLogic) : ControllerBase
 {

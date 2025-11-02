@@ -77,14 +77,14 @@
 
             StateHasChanged();
 
-            await Process();
+            await ProcessAsync();
         };
 
         FaceHubService.OnDisconnect += async (ex) =>
         {
             if (ex is not null)
             {
-                _quality = 0.5;
+                _quality = 0.5; // Reset in case the setting was too high for SignalR
                 Snackbar.Add("An error occured. Connection to the server was lost.", MudBlazor.Severity.Error);
 
                 if (_detectionActive)
@@ -103,7 +103,7 @@
             _detectionActive = true;
             await FaceHubService.StartConnectionAsync();
 
-            await Process();
+            await ProcessAsync();
         }
         else
         {
@@ -115,9 +115,9 @@
         }
     }
 
-    private async Task Process()
+    private async Task ProcessAsync()
     {
-        var bytes = await _cameraFeed.ProcessFrame();
+        var bytes = await _cameraFeed.ProcessFrameAsync();
         await FaceHubService.RecogniseFacesAsync(bytes);
     }
 

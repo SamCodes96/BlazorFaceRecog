@@ -2,7 +2,13 @@
 
 namespace BlazorFaceRecog.Server.Services;
 
-public class FaceCache(IMemoryCache cache)
+public interface IFaceCache
+{
+    byte[]? GetFace(Guid id);
+    void SetFace(Guid id, byte[]? thumbnail);
+}
+
+public class FaceCache(IMemoryCache cache) : IFaceCache
 {
     public byte[]? GetFace(Guid id) => cache.Get<byte[]?>(id);
 

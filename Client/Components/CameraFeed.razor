@@ -43,14 +43,14 @@ else
     [Parameter]
     public EventCallback<bool> OnWebcamStart { get; set; }
 
-    [JSInvokable]
-    public async Task DisplayWebcam()
+    [JSInvokable("DisplayWebcam")]
+    public async Task DisplayWebcamAsync()
     {
         WebcamStarted = true;
         await OnWebcamStart.InvokeAsync();
     }
 
-    public async Task<byte[]> ProcessFrame()
+    public async Task<byte[]> ProcessFrameAsync()
     {
         var result = await _module.InvokeAsync<IJSStreamReference>("getFrame", Quality);
         var stream = await result.OpenReadStreamAsync();
