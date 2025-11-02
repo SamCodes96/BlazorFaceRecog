@@ -38,7 +38,7 @@ More details can be found [here](https://onnxruntime.ai/docs/execution-providers
 ### Threshold (*integer* < 100)
 This is the percentage similarity threshold before two faces can be considered a match. If there are no trained faces above this threshold then the detected face is treated as not recognised. The app only displays the match with the highest percentage similarity.
 
-The percentage similarity can vary with differences in lighting/angle, and if the subject is wearing glasses. By default the threshold is 75%. Anywhere in the 70-80% range is recommended. If the threshold setting is not set then it has no effect, and the highest similarity match is always returned.
+The percentage similarity can vary with differences in lighting/angle, and if the subject is wearing glasses. By default the threshold is 70%. Anywhere in the 65-75% range is recommended. If the threshold setting is not set then it has no effect, and the highest similarity match is always returned.
 
 ### MongoDB
 By default the app stores trained faces in memory. MongoDB can be used as an alternative means for persistent storage. Whether MongoDB is used is based on whether there is a property called `MongoDB` present in the setttings.
