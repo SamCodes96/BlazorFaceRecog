@@ -56,7 +56,6 @@ app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
 app.UseRouting();
 
-app.MapHub<FaceHub>($"/{nameof(FaceHub)}");
 app.MapFaceEndpoints();
 
 app.MapRazorPages();

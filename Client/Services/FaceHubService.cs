@@ -29,7 +29,7 @@ public class FaceHubService : IFaceHubService
     public FaceHubService(NavigationManager navigationManager)
     {
         _hubConnection = new HubConnectionBuilder()
-            .WithUrl(navigationManager.BaseUri + "FaceHub")
+            .WithUrl(navigationManager.BaseUri + "Faces/Recognise")
             .Build();
 
         _hubConnection.On<AnalyzedImage?>("ImageAnalyzed", HandleResponse);

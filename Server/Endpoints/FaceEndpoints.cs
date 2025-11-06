@@ -14,6 +14,7 @@ public static class FaceEndpoints
         group.MapGet("/", Get);
         group.MapPost("/Train", Train);
         group.MapPost("/Detect", Detect);
+        group.MapHub<FaceHub>("/Recognise");
 
         group.DisableAntiforgery();
 
