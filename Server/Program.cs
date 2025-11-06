@@ -57,7 +57,8 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.MapHub<FaceHub>($"/{nameof(FaceHub)}");
-app.MapControllers();
+app.MapFaceEndpoints();
+
 app.MapRazorPages();
 app.MapFallbackToFile("index.html");
 

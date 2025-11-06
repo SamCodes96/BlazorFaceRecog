@@ -5,23 +5,30 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlazorFaceRecog.Server.Endpoints;
 
-[ApiController]
-[Route("Faces")]
-public class FaceController(
-    IFaceCache faceCache,
-    IFaceService faceService,
-    IImageLogic imageLogic) : ControllerBase
+public static class FaceEndpoints
 {
-    [HttpGet]
-    public IActionResult Saved()
+    public static RouteGroupBuilder MapFaceEndpoints(this IEndpointRouteBuilder builder)
     {
-        var saved = faceService.GetSavedFaces();
+        var group = builder.MapGroup("/Faces");
 
-        return Ok(saved);
+        group.MapGet("/", Get);
+        group.MapPost("/Train", Train);
+        group.MapPost("/Detect", Detect);
+
+        return group;
     }
 
-    [HttpPost, Route(nameof(Train))]
-    public IActionResult Train([FromBody] IEnumerable<TrainFaceModel> faceModels)
+    private static IResult Get(
+        [FromServices] IFaceService faceService)
+    {
+        var saved = faceService.GetSavedFaces();
+        return Results.Ok(saved);
+    }
+
+    private static IResult Train(
+        [FromBody] IEnumerable<TrainFaceModel> faceModels,
+        [FromServices] IFaceService faceService,
+        [FromServices] IFaceCache faceCache)
     {
         var existingIds = faceService.GetSavedFaces().Select(f => f.Id).ToList();
 
@@ -44,18 +51,21 @@ public class FaceController(
         foreach (var deletedItem in existingIds.Except(updatedFaceIds))
             faceService.DeleteFace(deletedItem);
 
-        return Ok();
+        return Results.Created();
     }
 
-    [HttpPost, Route(nameof(Detect))]
-    public IActionResult Detect([FromBody] DetectFaceModel detectFaceModel)
+    private static IResult Detect(
+        [FromBody] DetectFaceModel detectFaceModel,
+        [FromServices] IFaceService faceService,
+        [FromServices] IFaceCache faceCache,
+        [FromServices] IImageLogic imageLogic)
     {
         var faces = faceService.DetectFacesInImage(detectFaceModel.ImageData);
 
         switch (faces.Count())
         {
-            case > 1: return BadRequest("Multiple faces detected");
-            case < 1: return BadRequest("No faces detected");
+            case > 1: return Results.BadRequest("Multiple faces detected");
+            case < 1: return Results.BadRequest("No faces detected");
         }
 
         var croppedFace = imageLogic.CropFaceInImage(detectFaceModel.ImageData, faces.First());
@@ -64,6 +74,6 @@ public class FaceController(
 
         var thumbnail = imageLogic.GetThumbnail(croppedFace);
 
-        return Content(thumbnail);
+        return Results.Content(thumbnail);
     }
 }
