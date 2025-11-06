@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Components.Forms
 @using MudBlazor.Utilities
 @using System.Threading
+@using System.Net.Http.Headers
 
 @inject HttpClient Http
 
@@ -120,10 +121,17 @@
 
         StateHasChanged();
 
-        var image = await GetFileContentAsync(e.File);
-        var payload = new DetectFaceModel(Model.Id, image);
+        using var form = new MultipartFormDataContent();
 
-        var response = await Http.PostAsJsonAsync("Faces/Detect", payload);
+        using var imageStream = e.File.OpenReadStream(2000 * 1024 * 1024);
+        var imageContent = new StreamContent(imageStream);
+        imageContent.Headers.ContentType = new MediaTypeHeaderValue(e.File.ContentType);
+        form.Add(imageContent, "file", e.File.Name);
+
+        var idContent = new StringContent(Model.Id.ToString());
+        form.Add(idContent, "id");
+
+        var response = await Http.PostAsync("Faces/Detect", form);
         var content = await response.Content.ReadAsStringAsync();
 
         if (response.IsSuccessStatusCode)
@@ -137,15 +145,5 @@
         }
 
         StateHasChanged();
-    }
-
-    private static async Task<byte[]> GetFileContentAsync(IBrowserFile file)
-    {
-        using var ms = new MemoryStream();
-        using var fileStream = file.OpenReadStream(2000 * 1024 * 1024);
-
-        await fileStream.CopyToAsync(ms);
-
-        return ms.ToArray();
     }
 }

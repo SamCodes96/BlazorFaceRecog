@@ -15,6 +15,8 @@ public static class FaceEndpoints
         group.MapPost("/Train", Train);
         group.MapPost("/Detect", Detect);
 
+        group.DisableAntiforgery();
+
         return group;
     }
 
@@ -55,12 +57,20 @@ public static class FaceEndpoints
     }
 
     private static IResult Detect(
-        [FromBody] DetectFaceModel detectFaceModel,
+        [FromForm] Guid id,
+        [FromForm] IFormFile file,
         [FromServices] IFaceService faceService,
         [FromServices] IFaceCache faceCache,
         [FromServices] IImageLogic imageLogic)
     {
-        var faces = faceService.DetectFacesInImage(detectFaceModel.ImageData);
+        byte[] image;
+        using (var ms = new MemoryStream())
+        {
+            file.CopyTo(ms);
+            image = ms.ToArray();
+        }
+
+        var faces = faceService.DetectFacesInImage(image);
 
         switch (faces.Count())
         {
@@ -68,9 +78,9 @@ public static class FaceEndpoints
             case < 1: return Results.BadRequest("No faces detected");
         }
 
-        var croppedFace = imageLogic.CropFaceInImage(detectFaceModel.ImageData, faces.First());
+        var croppedFace = imageLogic.CropFaceInImage(image, faces.First());
 
-        faceCache.SetFace(detectFaceModel.Id, croppedFace);
+        faceCache.SetFace(id, croppedFace);
 
         var thumbnail = imageLogic.GetThumbnail(croppedFace);
 
