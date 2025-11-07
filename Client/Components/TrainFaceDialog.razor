@@ -4,7 +4,7 @@
 @using System.Text.Json
 
 @inject ISnackbar Snackbar
-@inject HttpClient Http
+@inject IApiService ApiService
 
 <MudDialog ContentStyle="align-content: center; max-height:600px; overflow-y:auto; min-width:300px; min-height:216px;">
     <DialogContent>
@@ -45,8 +45,11 @@
 
         var faceModels = _cardGrid.GetTrainModels().ToArray();
 
-        var response = await Http.PostAsJsonAsync("Faces/Train", faceModels);
-        if (!response.IsSuccessStatusCode)
+        try
+        {
+            await ApiService.TrainFacesAsync(faceModels);
+        }
+        catch
         {
             Snackbar.Clear();
             Snackbar.Add("Failed to update. Please try again.", MudBlazor.Severity.Error);

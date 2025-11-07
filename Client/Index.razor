@@ -1,7 +1,7 @@
 ﻿@page "/"
 
 @inject IDialogService DialogService
-@inject IFaceHubService FaceHubService
+@inject IHubService HubService
 @inject ISnackbar Snackbar
 
 <PageTitle>Blazor Face Recog</PageTitle>
@@ -53,15 +53,13 @@
 
     private bool _detectionActive;
 
-    private bool _isProcessing;
-
     private AnalyzedImage? _analyzedImage;
 
     private double _quality = 0.5;
 
     protected override void OnInitialized()
     {
-        FaceHubService.OnResponseReceived += async analyzedImage =>
+        HubService.OnResponseReceived += async analyzedImage =>
         {
             _analyzedImage = analyzedImage;
 
@@ -80,7 +78,7 @@
             await ProcessAsync();
         };
 
-        FaceHubService.OnDisconnect += async (ex) =>
+        HubService.OnDisconnect += async (ex) =>
         {
             if (ex is not null)
             {
@@ -101,7 +99,7 @@
         if (!_detectionActive)
         {
             _detectionActive = true;
-            await FaceHubService.StartConnectionAsync();
+            await HubService.StartConnectionAsync();
 
             await ProcessAsync();
         }
@@ -110,7 +108,7 @@
             _detectionActive = false;
             _analyzedImage = null;
 
-            await FaceHubService.EndConnectionAsync();
+            await HubService.EndConnectionAsync();
             _ =_cameraFeed.ClearFaceHighlightAsync();
         }
     }
@@ -118,7 +116,7 @@
     private async Task ProcessAsync()
     {
         var bytes = await _cameraFeed.ProcessFrameAsync();
-        await FaceHubService.RecogniseFacesAsync(bytes);
+        await HubService.RecogniseFacesAsync(bytes);
     }
 
     private async Task OpenTrainDialogAsync()

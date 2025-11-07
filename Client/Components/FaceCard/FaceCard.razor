@@ -3,7 +3,7 @@
 @using System.Threading
 @using System.Net.Http.Headers
 
-@inject HttpClient Http
+@inject IApiService ApiService
 
 <MudPaper class="pa-2" 
           Elevation="0" 
@@ -125,23 +125,22 @@
 
         using var imageStream = e.File.OpenReadStream(2000 * 1024 * 1024);
         var imageContent = new StreamContent(imageStream);
-        imageContent.Headers.ContentType = new MediaTypeHeaderValue(e.File.ContentType);
-        form.Add(imageContent, "file", e.File.Name);
 
-        var idContent = new StringContent(Model.Id.ToString());
-        form.Add(idContent, "id");
+        var fileParam = new FileParameter(imageStream, e.File.Name, e.File.ContentType);
 
-        var response = await Http.PostAsync("Faces/Detect", form);
-        var content = await response.Content.ReadAsStringAsync();
-
-        if (response.IsSuccessStatusCode)
+        try
         {
-            Model.Thumbnail = content;
+            var response = await ApiService.DetectFacesAsync(fileParam, Model.Id);
+            Model.Thumbnail = response;
         }
-        else
+        catch (Exception ex)
         {
+            var message = ex is ApiException apiEx
+                ? apiEx.Response
+                : ex.Message;
+
             Model.SelectedFile = null;
-            _fileFailureErrorOverride = $"Failed: {content}";
+            _fileFailureErrorOverride = $"Failed: {message}";
         }
 
         StateHasChanged();

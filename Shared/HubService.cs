@@ -1,10 +1,11 @@
-﻿using BlazorFaceRecog.Shared;
-using Microsoft.AspNetCore.Components;
+﻿using System.Drawing;
 using Microsoft.AspNetCore.SignalR.Client;
 
-namespace BlazorFaceRecog.Client.Services;
+namespace BlazorFaceRecog.Shared;
 
-public interface IFaceHubService
+public record class AnalyzedImage(string Name, float Score, Rectangle Face);
+
+public interface IHubService
 {
     event Func<AnalyzedImage?, Task>? OnResponseReceived;
     event Func<Exception?, Task>? OnDisconnect;
@@ -14,7 +15,7 @@ public interface IFaceHubService
     Task RecogniseFacesAsync(byte[] imageData);
 }
 
-public class FaceHubService : IFaceHubService
+public class HubService : IHubService
 {
     private readonly HubConnection _hubConnection;
 
@@ -26,12 +27,10 @@ public class FaceHubService : IFaceHubService
         remove => _hubConnection?.Closed -= value;
     }
 
-    public FaceHubService(NavigationManager navigationManager)
+    public HubService(IHubConnectionFactory hubConnectionFactory)
     {
-        _hubConnection = new HubConnectionBuilder()
-            .WithUrl(navigationManager.BaseUri + "Faces/Recognise")
-            .Build();
 
+        _hubConnection = hubConnectionFactory.CreateHubConnection("Faces/Recognise");
         _hubConnection.On<AnalyzedImage?>("ImageAnalyzed", HandleResponse);
     }
 

@@ -1,5 +1,5 @@
 using BlazorFaceRecog.Client;
-using BlazorFaceRecog.Client.Services;
+using BlazorFaceRecog.Shared;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor;
@@ -14,7 +14,7 @@ builder.Services.AddHttpClient("BlazorFaceRecog.ServerAPI", client => client.Bas
 // Supply HttpClient instances that include access tokens when making requests to the server project
 builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("BlazorFaceRecog.ServerAPI"));
 
-builder.Services.AddScoped<IFaceHubService, FaceHubService>();
+builder.Services.AddBackendServices(builder.HostEnvironment.BaseAddress);
 
 builder.Services.AddMudServices(config =>
 {

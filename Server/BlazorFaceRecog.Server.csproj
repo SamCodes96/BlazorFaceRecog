@@ -14,10 +14,12 @@
     <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu" Version="1.9.0" />
     <PackageReference Include="MongoDB.Bson" Version="3.5.0" />
     <PackageReference Include="MongoDB.Driver" Version="3.5.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Client\BlazorFaceRecog.Client.csproj" />    
     <ProjectReference Include="..\Shared\BlazorFaceRecog.Shared.csproj" />
   </ItemGroup>
+
 </Project>

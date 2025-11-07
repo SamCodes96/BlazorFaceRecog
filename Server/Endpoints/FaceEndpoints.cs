@@ -1,4 +1,6 @@
-﻿using BlazorFaceRecog.Server.Logic;
+﻿using System.Net;
+using System.Net.Mime;
+using BlazorFaceRecog.Server.Logic;
 using BlazorFaceRecog.Server.Services;
 using BlazorFaceRecog.Shared;
 using Microsoft.AspNetCore.Mvc;
@@ -11,9 +13,19 @@ public static class FaceEndpoints
     {
         var group = builder.MapGroup("/Faces");
 
-        group.MapGet("/", Get);
-        group.MapPost("/Train", Train);
-        group.MapPost("/Detect", Detect);
+        group.MapGet("/", GetSavedFaces)
+            .WithName(nameof(GetSavedFaces))
+            .Produces<IEnumerable<SavedFaceModel>>();
+
+        group.MapPost("/Train", TrainFaces)
+            .WithName(nameof(TrainFaces))
+            .Produces((int)HttpStatusCode.Created);
+
+        group.MapPost("/Detect", DetectFaces)
+            .WithName(nameof(DetectFaces))
+            .Produces<string>((int)HttpStatusCode.BadRequest, MediaTypeNames.Text.Plain)
+            .Produces<string>((int)HttpStatusCode.OK, MediaTypeNames.Text.Plain);
+
         group.MapHub<FaceHub>("/Recognise");
 
         group.DisableAntiforgery();
@@ -21,14 +33,14 @@ public static class FaceEndpoints
         return group;
     }
 
-    private static IResult Get(
+    private static IResult GetSavedFaces(
         [FromServices] IFaceService faceService)
     {
         var saved = faceService.GetSavedFaces();
         return Results.Ok(saved);
     }
 
-    private static IResult Train(
+    private static IResult TrainFaces(
         [FromBody] IEnumerable<TrainFaceModel> faceModels,
         [FromServices] IFaceService faceService,
         [FromServices] IFaceCache faceCache)
@@ -57,9 +69,9 @@ public static class FaceEndpoints
         return Results.Created();
     }
 
-    private static IResult Detect(
+    private static IResult DetectFaces(
+        IFormFile file,
         [FromForm] Guid id,
-        [FromForm] IFormFile file,
         [FromServices] IFaceService faceService,
         [FromServices] IFaceCache faceCache,
         [FromServices] IImageLogic imageLogic)

@@ -1,7 +1,7 @@
 ﻿@using System;
 @using System.Linq.Expressions
 
-@inject HttpClient Http
+@inject IApiService ApiService
 
 <MudGrid Spacing="2" Justify="Justify.Center">
     @if (_loadState == GridLoadState.Loaded)
@@ -50,10 +50,7 @@
     {
         try
         {
-            var req = await Http.GetAsync("Faces");
-            req.EnsureSuccessStatusCode();
-
-            var savedFaces = await req.Content.ReadFromJsonAsync<SavedFaceModel[]>() ?? [];
+            var savedFaces = await ApiService.GetSavedFacesAsync();
 
             foreach (var item in savedFaces)
             {

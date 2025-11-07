@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using BlazorFaceRecog.Server;
 using BlazorFaceRecog.Server.Configuration;
 using BlazorFaceRecog.Server.Endpoints;
@@ -11,14 +12,17 @@ var builder = WebApplication.CreateBuilder(args);
 if (builder.Environment.IsDevelopment())
     builder.Configuration.AddUserSecrets<Program>();
 
-builder.Services.AddResponseCompression(opts => opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["application/octet-stream"]));
+builder.Services.AddResponseCompression(opts =>
+    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat([MediaTypeNames.Application.Octet]));
 
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication();
 
 builder.Services.AddSignalR().AddHubOptions<FaceHub>(opt => opt.MaximumReceiveMessageSize = 1024 * 1024);
-builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IFaceCache, FaceCache>();
@@ -43,7 +47,11 @@ else
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
+{
     app.UseWebAssemblyDebugging();
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
