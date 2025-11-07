@@ -1,8 +1,12 @@
 ﻿namespace BlazorFaceRecog.Shared;
 
+#pragma warning disable CS8907
+
 public partial record SavedFaceModel(Guid Id, string Name, string Thumbnail);
 
 public partial record TrainFaceModel(Guid Id, string Name);
+
+#pragma warning restore CS8907
 
 public interface IApiService
 {
