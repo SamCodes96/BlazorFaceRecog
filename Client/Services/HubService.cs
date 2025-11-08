@@ -1,4 +1,5 @@
 ﻿using BlazorFaceRecog.Shared;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace BlazorFaceRecog.Client.Services;
@@ -25,10 +26,12 @@ public class HubService : IHubService
         remove => _hubConnection?.Closed -= value;
     }
 
-    public HubService(IHubConnectionFactory hubConnectionFactory)
+    public HubService(NavigationManager navigationManager)
     {
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(navigationManager.BaseUri + "Faces/Recognise")
+            .Build();
 
-        _hubConnection = hubConnectionFactory.CreateHubConnection("Faces/Recognise");
         _hubConnection.On<AnalyzedImage?>("ImageAnalyzed", HandleResponse);
     }
 

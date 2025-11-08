@@ -18,7 +18,6 @@ builder.Services.AddTransient(sp =>
 });
 
 builder.Services.AddScoped<IHubService, HubService>();
-builder.Services.AddTransient<IHubConnectionFactory>(_ => new HubConnectionFactory(builder.HostEnvironment.BaseAddress));
 
 builder.Services.AddMudServices(config =>
 {
