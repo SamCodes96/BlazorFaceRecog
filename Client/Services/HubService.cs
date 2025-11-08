@@ -1,9 +1,7 @@
-﻿using System.Drawing;
+﻿using BlazorFaceRecog.Shared;
 using Microsoft.AspNetCore.SignalR.Client;
 
-namespace BlazorFaceRecog.Shared;
-
-public record class AnalyzedImage(string Name, float Score, Rectangle Face);
+namespace BlazorFaceRecog.Client.Services;
 
 public interface IHubService
 {

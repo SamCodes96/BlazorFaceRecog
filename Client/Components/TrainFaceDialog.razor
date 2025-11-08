@@ -1,7 +1,8 @@
-﻿@using BlazorFaceRecog.Client.Components.FaceCard
-@using Microsoft.AspNetCore.Components.Forms
+﻿@using System.Text.Json
 @using System.Text.Json.Serialization
-@using System.Text.Json
+@using BlazorFaceRecog.Client.Components.FaceCard
+@using BlazorFaceRecog.Client.Services
+@using Microsoft.AspNetCore.Components.Forms
 
 @inject ISnackbar Snackbar
 @inject IApiService ApiService
@@ -45,11 +46,9 @@
 
         var faceModels = _cardGrid.GetTrainModels().ToArray();
 
-        try
-        {
-            await ApiService.TrainFacesAsync(faceModels);
-        }
-        catch
+ 
+        var response = await ApiService.TrainFacesAsync(faceModels);
+        if (!response.IsSuccessful)
         {
             Snackbar.Clear();
             Snackbar.Add("Failed to update. Please try again.", MudBlazor.Severity.Error);

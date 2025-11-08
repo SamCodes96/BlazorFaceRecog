@@ -22,7 +22,6 @@ builder.Services.AddSignalR().AddHubOptions<FaceHub>(opt => opt.MaximumReceiveMe
 builder.Services.AddRazorPages();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IFaceCache, FaceCache>();
@@ -49,8 +48,6 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
-    app.UseSwagger();
-    app.UseSwaggerUI();
 }
 
 app.UseAuthentication();

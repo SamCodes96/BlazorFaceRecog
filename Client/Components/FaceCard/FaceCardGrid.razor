@@ -1,5 +1,6 @@
 ﻿@using System;
 @using System.Linq.Expressions
+@using BlazorFaceRecog.Client.Services
 
 @inject IApiService ApiService
 
@@ -48,11 +49,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        try
+        var response = await ApiService.GetSavedFacesAsync();
+        if (response.IsSuccessful)
         {
-            var savedFaces = await ApiService.GetSavedFacesAsync();
-
-            foreach (var item in savedFaces)
+            foreach (var item in response.Content)
             {
                 var viewModel = FaceCardViewModel.FromSaveModel(item);
                 _models.Add(viewModel);
@@ -63,7 +63,7 @@
 
             _loadState = GridLoadState.Loaded;
         }
-        catch
+        else
         {
             _loadState = GridLoadState.Errored;
         }

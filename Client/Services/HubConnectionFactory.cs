@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 
-namespace BlazorFaceRecog.Shared;
+namespace BlazorFaceRecog.Client.Services;
 
 public interface IHubConnectionFactory
 {

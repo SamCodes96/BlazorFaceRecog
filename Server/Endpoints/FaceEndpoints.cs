@@ -1,6 +1,4 @@
-﻿using System.Net;
-using System.Net.Mime;
-using BlazorFaceRecog.Server.Logic;
+﻿using BlazorFaceRecog.Server.Logic;
 using BlazorFaceRecog.Server.Services;
 using BlazorFaceRecog.Shared;
 using Microsoft.AspNetCore.Mvc;
@@ -13,18 +11,9 @@ public static class FaceEndpoints
     {
         var group = builder.MapGroup("/Faces");
 
-        group.MapGet("/", GetSavedFaces)
-            .WithName(nameof(GetSavedFaces))
-            .Produces<IEnumerable<SavedFaceModel>>();
-
-        group.MapPost("/Train", TrainFaces)
-            .WithName(nameof(TrainFaces))
-            .Produces((int)HttpStatusCode.Created);
-
-        group.MapPost("/Detect", DetectFaces)
-            .WithName(nameof(DetectFaces))
-            .Produces<string>((int)HttpStatusCode.BadRequest, MediaTypeNames.Text.Plain)
-            .Produces<string>((int)HttpStatusCode.OK, MediaTypeNames.Text.Plain);
+        group.MapGet("/", GetSavedFaces);
+        group.MapPost("/Train", TrainFaces);
+        group.MapPost("/Detect", DetectFaces);
 
         group.MapHub<FaceHub>("/Recognise");
 

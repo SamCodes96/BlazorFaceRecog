@@ -1,7 +1,8 @@
-﻿@using Microsoft.AspNetCore.Components.Forms
-@using MudBlazor.Utilities
+﻿@using System.Net.Http.Headers
 @using System.Threading
-@using System.Net.Http.Headers
+@using BlazorFaceRecog.Client.Services
+@using Microsoft.AspNetCore.Components.Forms
+@using MudBlazor.Utilities
 
 @inject IApiService ApiService
 
@@ -126,21 +127,17 @@
         using var imageStream = e.File.OpenReadStream(2000 * 1024 * 1024);
         var imageContent = new StreamContent(imageStream);
 
-        var fileParam = new FileParameter(imageStream, e.File.Name, e.File.ContentType);
+        var streamPart = new StreamPart(imageStream, e.File.Name, e.File.ContentType);
 
-        try
+        var response = await ApiService.DetectFacesAsync(Model.Id.ToString(), streamPart);
+        if (response.IsSuccessful)
         {
-            var response = await ApiService.DetectFacesAsync(fileParam, Model.Id);
-            Model.Thumbnail = response;
+            Model.Thumbnail = response.Content;
         }
-        catch (Exception ex)
+        else
         {
-            var message = ex is ApiException apiEx
-                ? apiEx.Response
-                : ex.Message;
-
             Model.SelectedFile = null;
-            _fileFailureErrorOverride = $"Failed: {message}";
+            _fileFailureErrorOverride = $"Failed: {response.Content}";
         }
 
         StateHasChanged();
